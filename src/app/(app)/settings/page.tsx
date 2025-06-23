@@ -96,6 +96,20 @@ export default function SettingsPage() {
                     <Label htmlFor="icloudPass">App-Specific Password</Label>
                     <Input id="icloudPass" type="password" />
                  </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="daily-limit">Daily Upload Limit</Label>
+                    <Input id="daily-limit" type="number" placeholder="e.g., 1000" defaultValue="1000" />
+                    <p className="text-sm text-muted-foreground">
+                      Set the maximum number of files to upload to iCloud each day.
+                    </p>
+                 </div>
+                 <div className="flex items-center space-x-2">
+                    <Switch id="delete-yesterday" />
+                    <Label htmlFor="delete-yesterday">Delete Yesterday's Files Before Upload</Label>
+                 </div>
+                 <p className="text-sm text-muted-foreground pt-1">
+                    Ensures a clean slate by removing files from the previous day's sync. Use with caution.
+                 </p>
               </div>
             </CardContent>
             <CardFooter>
