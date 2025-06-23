@@ -2,10 +2,6 @@
 
 import * as React from "react"
 import {
-  CaretSortIcon,
-  ChevronDownIcon,
-} from "@radix-ui/react-icons"
-import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
@@ -17,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { MoreHorizontal, FileDown, Calendar as CalendarIcon } from "lucide-react"
+import { MoreHorizontal, FileDown, Calendar as CalendarIcon, ChevronsUpDown, ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -108,7 +104,7 @@ export const columns: ColumnDef<Payment>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Date
-          <CaretSortIcon className="ml-2 h-4 w-4" />
+          <ChevronsUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
@@ -240,7 +236,7 @@ export default function FileExplorerPage() {
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto">
-                Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
