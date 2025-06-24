@@ -7,19 +7,14 @@ import path from 'path';
 
 export type { Settings } from "@/lib/settings";
 
-export async function handleSaveSettings(newSettings: Partial<Settings>): Promise<{success: boolean, message?: string}> {
+// Action for UI/AI settings that do NOT affect the backend config.conf
+export async function handleSaveAppSettings(newSettings: Partial<Settings>): Promise<{success: boolean, message?: string}> {
   try {
     const currentSettings = await getSettings();
     const updatedSettings = { ...currentSettings, ...newSettings };
     await saveSettings(updatedSettings);
 
     let message = "Settings saved successfully.";
-
-    // If backend-related settings are updated, regenerate the config file
-    if ('stagingDir' in newSettings || 'icloudUser' in newSettings) {
-        await generateAndSaveConfig(updatedSettings);
-        message = "Storage and backend settings have been updated and config.conf file regenerated.";
-    }
 
     // If the Google AI API key is provided, write it to the .env file.
     if (newSettings.googleAiApiKey) {
@@ -33,13 +28,36 @@ export async function handleSaveSettings(newSettings: Partial<Settings>): Promis
         }
     }
     
+    // Revalidate paths that might be affected by these settings
     revalidatePath('/settings');
     revalidatePath('/summarize');
-    revalidatePath('/');
     
     return { success: true, message };
   } catch (error) {
-    console.error("Failed to save settings:", error);
+    console.error("Failed to save app settings:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    return { success: false, message: `Failed to save settings: ${errorMessage}` };
+  }
+}
+
+
+// Action specifically for backend settings that REQUIRE config.conf regeneration
+export async function handleSaveBackendSettings(newSettings: Partial<Settings>): Promise<{success: boolean, message?: string}> {
+  try {
+    const currentSettings = await getSettings();
+    const updatedSettings = { ...currentSettings, ...newSettings };
+
+    // First, save all settings to the master settings.json file
+    await saveSettings(updatedSettings);
+
+    // Then, regenerate the config.conf for the backend scripts
+    await generateAndSaveConfig(updatedSettings);
+    
+    revalidatePath('/settings');
+    
+    return { success: true, message: "Backend settings updated. The config.conf file has been regenerated." };
+  } catch (error) {
+    console.error("Failed to save backend settings:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
     return { success: false, message: `Failed to save settings: ${errorMessage}` };
   }
