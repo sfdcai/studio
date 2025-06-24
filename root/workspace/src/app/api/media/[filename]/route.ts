@@ -26,6 +26,7 @@ export async function GET(
     const filePath = file.processedPath || file.archivePath || file.stagingPath;
 
     if (!filePath || !fs.existsSync(filePath)) {
+      console.error(`File path not found on disk for ${filename}: Expected at ${filePath}`);
       return new NextResponse('File not found on disk', { status: 404 });
     }
 

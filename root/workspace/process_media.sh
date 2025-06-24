@@ -107,7 +107,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
         output_path="${PROCESSED_DIR}/$(basename "$file_name" ."$extension").mp4"
     fi
 
-    if [[ "$file_type" == "Image" ]]; {
+    if [[ "$file_type" == "Image" ]]; then
         db_log "INFO" "Image processing. Age: $age years." "$file_id"
         if [ "$age" -le 1 ]; then # 0-1 years old
             processing_command="convert \"$file_path\" -quality 95 \"$output_path\""
@@ -116,7 +116,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
         else # 5+ years old
             processing_command="convert \"$file_path\" -quality \"$JPG_QUAL_LOW\" \"$output_path\""
         fi
-    } elif [[ "$file_type" == "Video" ]]; then
+    elif [[ "$file_type" == "Video" ]]; then
         db_log "INFO" "Video processing. Age: $age years." "$file_id"
         if [ "$age" -le 1 ]; then # 0-1 years old
             processing_command="ffmpeg -i \"$file_path\" -y -c:v libx265 -crf \"$VID_CRF_1080p\" -preset medium -vf \"scale='min(1920,iw)':-2\" -c:a aac -b:a 128k \"$output_path\""

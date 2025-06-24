@@ -88,6 +88,11 @@ export async function getStats(): Promise<{ [key: string]: number }> {
   for (const row of rows) {
     stats[row.key] = row.value;
   }
+  
+  // Also get the total file count dynamically
+  const totalFilesRow = await db.get("SELECT COUNT(*) as count FROM files");
+  stats['total_files'] = totalFilesRow.count;
+
   return stats;
 }
 
@@ -108,12 +113,12 @@ export async function getProcessingHistory(): Promise<ProcessingHistoryPoint[]> 
     const db = await getDb();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoISO = sevenDaysAgo.toISOString();
+    const sevenDaysAgoISO = sevenDaysAgo.toISOString().split('T')[0] + 'T00:00:00Z';
 
     const rows: { day: string, processed: number, failed: number }[] = await db.all(`
         WITH daily_counts AS (
             SELECT
-                strftime('%Y-%m-%d', timestamp) AS day,
+                date(timestamp) AS day,
                 SUM(CASE WHEN message LIKE 'SUCCESS: Processing complete%' THEN 1 ELSE 0 END) AS processed,
                 SUM(CASE WHEN level = 'ERROR' AND message LIKE 'ERROR: Processing FAILED%' THEN 1 ELSE 0 END) AS failed
             FROM logs

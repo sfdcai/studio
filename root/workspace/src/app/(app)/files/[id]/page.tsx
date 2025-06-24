@@ -73,7 +73,9 @@ export default async function FileDetailsPage({ params }: { params: { id: string
     "failed": "destructive"
   }[file.status] ?? "outline";
 
-  const savings = file.originalSize > 0 && file.status === 'success' ? Math.round(((file.originalSize - file.compressedSize) / file.originalSize) * 100) : 0;
+  const savings = file.originalSize > 0 && file.status === 'success' && file.compressedSize > 0
+    ? Math.round(((file.originalSize - file.compressedSize) / file.originalSize) * 100) 
+    : 0;
   
   return (
     <div className="p-4 md:p-8">

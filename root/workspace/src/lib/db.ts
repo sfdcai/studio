@@ -72,4 +72,9 @@ async function initDb(db: Database) {
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('duplicates_found', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('storage_saved_mb', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('processing_errors', 0)");
+  
+  // This stat is not set by the script but is useful for dashboard queries.
+  // We'll update it periodically or via a trigger if needed.
+  const fileCount = await db.get('SELECT COUNT(*) as count FROM files');
+  await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('total_files', ?)", fileCount.count);
 }

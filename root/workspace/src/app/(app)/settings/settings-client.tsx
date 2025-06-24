@@ -20,8 +20,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Terminal, KeyRound, Bot, Files, BarChart3, Settings as SettingsIcon } from "lucide-react"
+import { KeyRound, Files, BarChart3, Settings as SettingsIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { type Settings, handleSaveSettings } from "./actions"
 import { Separator } from "@/components/ui/separator"

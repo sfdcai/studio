@@ -16,7 +16,8 @@ export default async function DashboardPage() {
   const stats = await getStats();
   const processingHistoryData = await getProcessingHistory();
 
-  const totalFiles = stats.total_files || data.length; // Fallback for older DBs
+  // Use the stats table as the source of truth, with fallbacks.
+  const totalFiles = stats.total_files || data.length;
   const storageSaved = stats.storage_saved_mb || 0;
   const processingErrors = stats.processing_errors || 0;
   const duplicatesFound = stats.duplicates_found || 0;

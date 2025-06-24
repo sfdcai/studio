@@ -31,13 +31,19 @@ export default async function LogsPage() {
         <CardContent>
           <ScrollArea className="h-[60vh] w-full rounded-md border">
             <div className="p-4 font-mono text-sm">
-              {logs.map((log, index) => (
-                <div key={index} className="flex items-start gap-4 mb-2">
-                  <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</span>
-                  <LogLevelBadge level={log.level} />
-                  <span className="flex-1 break-all">{log.message}</span>
+              {logs.length === 0 ? (
+                <div className="flex justify-center items-center h-full text-muted-foreground">
+                    No log entries found.
                 </div>
-              ))}
+              ) : (
+                logs.map((log, index) => (
+                  <div key={index} className="flex items-start gap-4 mb-2">
+                    <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</span>
+                    <LogLevelBadge level={log.level} />
+                    <span className="flex-1 break-all">{log.message}</span>
+                  </div>
+                ))
+              )}
             </div>
           </ScrollArea>
         </CardContent>
