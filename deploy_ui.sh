@@ -26,7 +26,7 @@ error_handler() {
 trap 'error_handler $LINENO' ERR
 
 # --- Script Configuration ---
-REPO_URL="git@github.com:sfdcai/studio.git" # <-- This is your repository
+REPO_URL="git@github.com:sfdcai/studio.git"
 APP_DIR="/root/mediaflow"
 PM2_APP_NAME="mediaflow-app"
 SSH_CONFIRM_FILE="$HOME/.ssh/github_key_verified"
@@ -46,6 +46,14 @@ safe_restart() {
   git clean -fd
   echo "Pulling latest code from GitHub..."
   git pull
+
+  echo "Cleaning up duplicate workspace directory if it exists..."
+  if [ -d "root/workspace" ]; then
+      echo "Found duplicate workspace directory. Removing it..."
+      rm -rf "root/workspace"
+      echo "Cleanup successful."
+  fi
+
   echo "Installing dependencies..."
   npm install
   echo "Building application for production..."
@@ -143,9 +151,20 @@ else
     git clone $REPO_URL $APP_DIR
 fi
 
+cd $APP_DIR
+
+# Clean up duplicate workspace directory if it exists
+echo -e "\n${GREEN}---> Cleaning up old workspace directory if it exists...${NC}"
+if [ -d "root/workspace" ]; then
+    echo "Found duplicate workspace directory. Removing it..."
+    rm -rf "root/workspace"
+    echo "Cleanup successful."
+else
+    echo "No duplicate workspace found. Skipping cleanup."
+fi
+
 # 5. INSTALL DEPENDENCIES & BUILD
 echo -e "\n${GREEN}---> 5. Installing npm dependencies...${NC}"
-cd $APP_DIR
 npm install
 
 echo -e "\n${GREEN}---> 6. Building Next.js app for production...${NC}"
