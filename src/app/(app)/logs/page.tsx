@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { data } from "@/lib/data"
+import { getMediaFiles, type MediaFile } from "@/lib/data"
 
-const generateLogs = () => {
+const generateLogs = (data: MediaFile[]) => {
   const allLogs: { level: string, message: string, timestamp: string }[] = [];
   
   data.forEach(file => {
@@ -21,7 +21,7 @@ const generateLogs = () => {
 
       switch(file.status) {
           case 'success':
-              addLog("INFO", `Compression successful for ${fileName}. Saved ${file.originalSize - file.compressedSize} MB.`, 5);
+              addLog("INFO", `Compression successful for ${fileName}. Saved ${(file.originalSize - file.compressedSize).toFixed(2)} MB.`, 5);
               if (file.googlePhotosBackup) {
                   addLog("INFO", `Uploading to Google Photos for ${fileName}.`, 6);
                   addLog("INFO", `Upload to Google Photos successful for ${fileName}.`, 10);
@@ -50,8 +50,6 @@ const generateLogs = () => {
   return allLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
-const logs = generateLogs();
-
 const LogLevelBadge = ({ level }: { level: string }) => {
   const variant = {
     "INFO": "default",
@@ -62,7 +60,10 @@ const LogLevelBadge = ({ level }: { level: string }) => {
   return <Badge variant={variant as any} className="w-16 justify-center">{level}</Badge>
 }
 
-export default function LogsPage() {
+export default async function LogsPage() {
+  const data = await getMediaFiles();
+  const logs = generateLogs(data);
+
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between space-y-2 mb-4">

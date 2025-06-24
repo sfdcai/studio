@@ -1,4 +1,4 @@
-import { data, MediaFile } from "@/lib/data";
+import { getMediaFile, MediaFile } from "@/lib/data";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Camera, Clock, HardDrive, Zap, Tag, Cloud, History, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import path from "path";
+import fs from "fs";
 
 const DetailRow = ({ icon, label, children }: { icon: React.ReactNode, label: string, children: React.ReactNode }) => (
   <>
@@ -47,10 +49,8 @@ const LogLevelBadge = ({ level }: { level: string }) => {
     return <Badge variant={variant as any} className="w-16 justify-center">{level}</Badge>
 }
 
-const generateLogsForFile = (file: MediaFile) => {
+const generateLogsForFile = (file: MediaFile, fileNameWithExt: string) => {
     const logs: { level: string, message: string, timestamp: string }[] = [];
-    const fileExtension = file.type === 'Image' ? 'jpg' : 'mp4';
-    const fileName = `${file.id}.${fileExtension}`;
     const baseTimestamp = new Date(file.createdDate);
 
     const addLog = (level: string, message: string, offsetSeconds: number) => {
@@ -58,33 +58,33 @@ const generateLogsForFile = (file: MediaFile) => {
         logs.push({ level, message, timestamp });
     };
 
-    addLog("INFO", `Found new file: ${fileName}`, 1);
-    addLog("INFO", `Starting processing for ${fileName}.`, 2);
+    addLog("INFO", `Found new file: ${fileNameWithExt}`, 1);
+    addLog("INFO", `Starting processing for ${fileNameWithExt}.`, 2);
 
     switch(file.status) {
         case 'success':
-            addLog("INFO", `Compression successful for ${fileName}. Saved ${file.originalSize - file.compressedSize} MB.`, 5);
+            addLog("INFO", `Compression successful for ${fileNameWithExt}. Saved ${(file.originalSize - file.compressedSize).toFixed(2)} MB.`, 5);
             if (file.googlePhotosBackup) {
-                addLog("INFO", `Uploading to Google Photos for ${fileName}.`, 6);
-                addLog("INFO", `Upload to Google Photos successful for ${fileName}.`, 10);
+                addLog("INFO", `Uploading to Google Photos for ${fileNameWithExt}.`, 6);
+                addLog("INFO", `Upload to Google Photos successful for ${fileNameWithExt}.`, 10);
             }
             if (file.icloudUpload) {
-                addLog("INFO", `Uploading to iCloud for ${fileName}.`, 11);
-                addLog("INFO", `Upload to iCloud successful for ${fileName}.`, 15);
+                addLog("INFO", `Uploading to iCloud for ${fileNameWithExt}.`, 11);
+                addLog("INFO", `Upload to iCloud successful for ${fileNameWithExt}.`, 15);
             } else {
-                addLog("WARN", `iCloud sync disabled. Skipping iCloud upload for ${fileName}.`, 11);
+                addLog("WARN", `iCloud sync disabled. Skipping iCloud upload for ${fileNameWithExt}.`, 11);
             }
-            addLog("INFO", `Processing complete for ${fileName}.`, 16);
+            addLog("INFO", `Processing complete for ${fileNameWithExt}.`, 16);
             break;
         case 'failed':
-             addLog("ERROR", `Compression failed for ${fileName}: Processing error.`, 5);
-             addLog("INFO", `Moving ${fileName} to error directory.`, 6);
+             addLog("ERROR", `Compression failed for ${fileNameWithExt}: Processing error.`, 5);
+             addLog("INFO", `Moving ${fileNameWithExt} to error directory.`, 6);
             break;
         case 'processing':
-            addLog("INFO", `Compression in progress for ${fileName}...`, 5);
+            addLog("INFO", `Compression in progress for ${fileNameWithExt}...`, 5);
             break;
         case 'pending':
-            addLog("INFO", `File ${fileName} is queued for processing.`, 3);
+            addLog("INFO", `File ${fileNameWithExt} is queued for processing.`, 3);
             break;
     }
     return logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -108,23 +108,32 @@ const generateProcessingHistory = (file: MediaFile) => {
     return history;
 }
 
-export default function FileDetailsPage({ params }: { params: { id: string } }) {
-  const file = data.find((f) => f.id === params.id);
+async function findFileExtension(id: string): Promise<string> {
+    const mediaDir = path.join(process.cwd(), 'public/media');
+    try {
+        const files = await fs.promises.readdir(mediaDir);
+        const foundFile = files.find(f => path.parse(f).name === id);
+        return foundFile ? path.parse(foundFile).ext : '';
+    } catch (e) {
+        console.error("Could not read media directory", e);
+        return '';
+    }
+}
 
-  if (!file) {
-    notFound();
-  }
+export default async function FileDetailsPage({ params }: { params: { id: string } }) {
+  const file = await getMediaFile(params.id);
+  const extension = await findFileExtension(params.id);
+  const fileNameWithExt = `${file.id}${extension}`;
   
-  const extension = file.type === "Image" ? "jpg" : "mp4";
   const statusVariant = {
     "success": "default",
     "processing": "secondary",
     "failed": "destructive"
   }[file.status] ?? "outline";
 
-  const savings = file.originalSize > 0 ? Math.round(((file.originalSize - file.compressedSize) / file.originalSize) * 100) : 0;
+  const savings = file.originalSize > 0 && file.status === 'success' ? Math.round(((file.originalSize - file.compressedSize) / file.originalSize) * 100) : 0;
   
-  const logs = generateLogsForFile(file);
+  const logs = generateLogsForFile(file, fileNameWithExt);
   const history = generateProcessingHistory(file);
 
   return (
@@ -136,18 +145,18 @@ export default function FileDetailsPage({ params }: { params: { id: string } }) 
             <span className="sr-only">Back to files</span>
           </Link>
         </Button>
-        <h2 className="text-3xl font-bold tracking-tight truncate">{file.id}.{extension}</h2>
+        <h2 className="text-3xl font-bold tracking-tight truncate">{fileNameWithExt}</h2>
       </div>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
             <Card className="overflow-hidden">
                 <CardContent className="p-0">
                 <Image
-                    alt={`Image for ${file.id}`}
+                    alt={`Preview for ${fileNameWithExt}`}
                     className="aspect-video w-full object-cover"
                     data-ai-hint="product image"
                     height={600}
-                    src="https://placehold.co/800x450.png"
+                    src={`/media/${fileNameWithExt}`}
                     width={800}
                 />
                 </CardContent>
@@ -215,8 +224,10 @@ export default function FileDetailsPage({ params }: { params: { id: string } }) 
                     </DetailRow>
                     <DetailRow icon={<Camera className="h-4 w-4"/>} label="Camera">{file.camera}</DetailRow>
                     <DetailRow icon={<Calendar className="h-4 w-4"/>} label="Created Date">{new Date(file.createdDate).toLocaleDateString()}</DetailRow>
-                     <DetailRow icon={<HardDrive className="h-4 w-4"/>} label="Original Size">{file.originalSize} MB</DetailRow>
-                    <DetailRow icon={<Zap className="h-4 w-4"/>} label="Compressed Size">{file.compressedSize} MB ({savings}% smaller)</DetailRow>
+                     <DetailRow icon={<HardDrive className="h-4 w-4"/>} label="Original Size">{file.originalSize.toFixed(2)} MB</DetailRow>
+                    <DetailRow icon={<Zap className="h-4 w-4"/>} label="Compressed Size">
+                        {file.compressedSize > 0 ? `${file.compressedSize.toFixed(2)} MB (${savings}% smaller)` : 'N/A'}
+                    </DetailRow>
                     <DetailRow icon={<Clock className="h-4 w-4"/>} label="Last Compressed">
                         {file.lastCompressed === "N/A" ? "N/A" : new Date(file.lastCompressed).toLocaleString()}
                     </DetailRow>

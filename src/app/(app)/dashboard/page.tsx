@@ -1,12 +1,8 @@
-"use client"
-
-import * as React from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
+import { getMediaFiles } from '@/lib/data';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts'
-import { DollarSign, Folder, AlertTriangle, CopyCheck, Play, Square } from "lucide-react"
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { data, MediaFile } from '@/lib/data'
+import { DollarSign, Folder, AlertTriangle, CopyCheck } from "lucide-react"
+import { JobControlCard } from '@/components/job-control-card'
 
 const processingHistoryData = [
   { name: 'Mon', processed: 20, failed: 1 },
@@ -26,8 +22,8 @@ const formatBytes = (mb: number) => {
     return `${tb.toFixed(1)} TB`;
 };
 
-export default function DashboardPage() {
-  const [isJobRunning, setIsJobRunning] = React.useState(true)
+export default async function DashboardPage() {
+  const data = await getMediaFiles();
 
   const totalFiles = data.length;
   const storageSaved = data.reduce((sum, file) => {
@@ -65,7 +61,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalFiles.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              +20.1% from last month
+              from your media directory
             </p>
           </CardContent>
         </Card>
@@ -79,7 +75,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{formatBytes(storageSaved)}</div>
             <p className="text-xs text-muted-foreground">
-              through compression
+              through compression (simulated)
             </p>
           </CardContent>
         </Card>
@@ -90,7 +86,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{duplicatesFound.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">saving 25.4 GB</p>
+            <p className="text-xs text-muted-foreground">saving 25.4 GB (simulated)</p>
           </CardContent>
         </Card>
         <Card>
@@ -100,7 +96,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{processingErrors}</div>
-            <p className="text-xs text-muted-foreground">in the last 7 days</p>
+            <p className="text-xs text-muted-foreground">based on simulated status</p>
           </CardContent>
         </Card>
       </div>
@@ -122,27 +118,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Control</CardTitle>
-            <CardDescription>Start and stop the file processing job.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center space-y-4 h-[200px]">
-            <div className="flex items-center space-x-2">
-              <span>Status:</span>
-              <Badge variant={isJobRunning ? 'default' : 'secondary'}>{isJobRunning ? 'Running' : 'Stopped'}</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">Last run: 5 minutes ago</p>
-          </CardContent>
-          <CardFooter className="flex justify-center space-x-2">
-            <Button onClick={() => setIsJobRunning(true)} disabled={isJobRunning} variant="outline">
-              <Play className="h-4 w-4 mr-2" /> Start
-            </Button>
-            <Button onClick={() => setIsJobRunning(false)} disabled={!isJobRunning} variant="destructive">
-              <Square className="h-4 w-4 mr-2" /> Stop
-            </Button>
-          </CardFooter>
-        </Card>
+        <JobControlCard />
       </div>
       <div className="grid gap-4">
         <Card>

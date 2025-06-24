@@ -1,3 +1,9 @@
+'use server';
+
+import fs from 'fs';
+import path from 'path';
+import { notFound } from 'next/navigation';
+
 export type MediaFile = {
   id: string
   type: "Image" | "Video"
@@ -13,15 +19,70 @@ export type MediaFile = {
   icloudUpload: boolean
 }
 
-export const data: MediaFile[] = [
-    { id: "m5gr84i9", type: "Image", originalSize: 420, compressedSize: 316, status: "success", camera: "Sony A7III", createdDate: "2023-10-25", lastCompressed: "2023-10-25T10:00:00Z", nextCompression: "2024-10-25", nasBackup: true, googlePhotosBackup: true, icloudUpload: false },
-    { id: "3u1reuv4", type: "Image", originalSize: 350, compressedSize: 242, status: "success", camera: "Canon R5", createdDate: "2023-10-25", lastCompressed: "2023-10-25T11:00:00Z", nextCompression: "2024-10-25", nasBackup: true, googlePhotosBackup: true, icloudUpload: true },
-    { id: "derv1ws0", type: "Video", originalSize: 950, compressedSize: 837, status: "processing", camera: "Nikon Z6", createdDate: "2023-10-26", lastCompressed: "2023-10-26T12:00:00Z", nextCompression: "2024-10-26", nasBackup: true, googlePhotosBackup: false, icloudUpload: false },
-    { id: "5kma53ae", type: "Image", originalSize: 1000, compressedSize: 874, status: "success", camera: "Sony A7III", createdDate: "2023-10-27", lastCompressed: "2023-10-27T17:00:00Z", nextCompression: "2024-10-27", nasBackup: true, googlePhotosBackup: true, icloudUpload: true },
-    { id: "bhqecj4p", type: "Video", originalSize: 800, compressedSize: 721, status: "failed", camera: "iPhone 14 Pro", createdDate: "2023-10-28", lastCompressed: "N/A", nextCompression: "N/A", nasBackup: false, googlePhotosBackup: false, icloudUpload: false },
-    { id: "m5gr84i9-2", type: "Image", originalSize: 420, compressedSize: 316, status: "success", camera: "Sony A7III", createdDate: "2023-10-25", lastCompressed: "2023-10-25T14:00:00Z", nextCompression: "2024-10-25", nasBackup: true, googlePhotosBackup: true, icloudUpload: false },
-    { id: "3u1reuv4-2", type: "Image", originalSize: 350, compressedSize: 242, status: "success", camera: "Canon R5", createdDate: "2023-10-25", lastCompressed: "2023-10-25T15:00:00Z", nextCompression: "2024-10-25", nasBackup: true, googlePhotosBackup: true, icloudUpload: false },
-    { id: "derv1ws0-2", type: "Video", originalSize: 950, compressedSize: 837, status: "processing", camera: "Nikon Z6", createdDate: "2023-10-26", lastCompressed: "2023-10-26T16:00:00Z", nextCompression: "2024-10-26", nasBackup: true, googlePhotosBackup: false, icloudUpload: false },
-    { id: "5kma53ae-2", type: "Image", originalSize: 1000, compressedSize: 874, status: "success", camera: "iPhone 14 Pro", createdDate: "2023-10-27", lastCompressed: "2023-10-27T17:00:00Z", nextCompression: "2024-10-27", nasBackup: true, googlePhotosBackup: true, icloudUpload: true },
-    { id: "bhqecj4p-2", type: "Video", originalSize: 800, compressedSize: 721, status: "failed", camera: "iPhone 14 Pro", createdDate: "2023-10-28", lastCompressed: "N/A", nextCompression: "N/A", nasBackup: false, googlePhotosBackup: false, icloudUpload: false },
-]
+// Helper function to simulate backend data that we can't get from the filesystem alone
+const cameras = ["Sony A7III", "Canon R5", "Nikon Z6", "iPhone 14 Pro", "GoPro Hero 11"];
+const statuses: MediaFile['status'][] = ["success", "processing", "failed", "pending"];
+
+function createMockFileData(id: string, fileExtension: string, createdDate: Date, originalSizeInBytes: number): MediaFile {
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const originalSize = parseFloat((originalSizeInBytes / (1024 * 1024)).toFixed(2));
+    let compressedSize = 0;
+    let lastCompressed = "N/A";
+    let nextCompression = "N/A";
+
+    if (status === 'success' || status === 'processing') {
+        compressedSize = parseFloat((originalSize * (Math.random() * (0.8 - 0.5) + 0.5)).toFixed(2));
+        const lastCompressedDate = new Date(createdDate.getTime() + Math.random() * 1000 * 60 * 60);
+        lastCompressed = lastCompressedDate.toISOString();
+        nextCompression = new Date(new Date(lastCompressedDate).setFullYear(lastCompressedDate.getFullYear() + 1)).toISOString();
+    }
+    
+    return {
+        id,
+        type: ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(fileExtension) ? "Image" : "Video",
+        originalSize,
+        compressedSize,
+        status,
+        camera: cameras[Math.floor(Math.random() * cameras.length)],
+        createdDate: createdDate.toISOString(),
+        lastCompressed,
+        nextCompression,
+        nasBackup: status === 'success' && Math.random() > 0.2,
+        googlePhotosBackup: status === 'success' && Math.random() > 0.4,
+        icloudUpload: status === 'success' && Math.random() > 0.8,
+    };
+}
+
+
+const mediaDir = path.join(process.cwd(), 'public/media');
+
+export async function getMediaFiles(): Promise<MediaFile[]> {
+    let fileNames: string[];
+    try {
+        fileNames = await fs.promises.readdir(mediaDir);
+    } catch (error) {
+        console.warn("\n\nCould not read media directory. Please create 'public/media' and add some image/video files to it.\n\n");
+        return [];
+    }
+    
+    const mediaFiles = await Promise.all(
+        fileNames.map(async (fileName) => {
+            const filePath = path.join(mediaDir, fileName);
+            const stats = await fs.promises.stat(filePath);
+            const id = path.parse(fileName).name;
+            const ext = path.parse(fileName).ext.toLowerCase();
+            return createMockFileData(id, ext, stats.birthtime, stats.size);
+        })
+    );
+
+    return mediaFiles.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+}
+
+export async function getMediaFile(id: string): Promise<MediaFile> {
+    const files = await getMediaFiles();
+    const file = files.find(f => f.id === id);
+    if (!file) {
+        notFound();
+    }
+    return file;
+}
