@@ -1,4 +1,3 @@
-'use server';
 
 import fs from 'fs/promises';
 import path from 'path';
@@ -17,6 +16,7 @@ export type Settings = {
   drivePath: string; // This is the destination path on the remote
   // iCloud
   icloudUser: string; // This is the Apple ID
+  icloudFolderStructure: string;
   // Processing
   processLimit: number;
   jpgQualityMedium: number;
@@ -44,10 +44,11 @@ const defaultSettings: Settings = {
   archiveDir: "/data/nas/archive",
   processedDir: "/data/nas/processed",
   logDir: "/data/nas/logs",
-  dbPath: "./media_library.sqlite",
+  dbPath: "media_library.sqlite",
   rcloneRemote: "gdrive",
   drivePath: "/Apps/MediaFlow/processed",
   icloudUser: "",
+  icloudFolderStructure: "{created_date:%Y/%m/%d}",
   processLimit: 1000,
   jpgQualityMedium: 85,
   jpgQualityLow: 75,
@@ -114,6 +115,9 @@ DB_PATH="${absoluteDbPath}"
 # --- Rclone Configuration ---
 RCLONE_REMOTE="${settings.rcloneRemote}"
 RCLONE_DEST_PATH="${settings.drivePath}"
+
+# --- iCloud Configuration ---
+ICLOUD_FOLDER_STRUCTURE="${settings.icloudFolderStructure}"
 
 # --- Processing Limits ---
 PROCESS_LIMIT="${settings.processLimit}"

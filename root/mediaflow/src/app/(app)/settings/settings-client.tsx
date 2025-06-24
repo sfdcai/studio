@@ -22,7 +22,8 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { KeyRound, Files, BarChart3, Settings as SettingsIcon, UploadCloud, Zap } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { type Settings, handleSaveAppSettings, handleSaveBackendSettings } from "@/app/(app)/settings/actions"
+import { type Settings } from "@/lib/settings"
+import { handleSaveAppSettings, handleSaveBackendSettings } from "@/app/(app)/settings/actions"
 import { Separator } from "@/components/ui/separator"
 
 type SettingsClientProps = {
