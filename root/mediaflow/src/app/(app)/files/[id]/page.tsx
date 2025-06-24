@@ -1,3 +1,4 @@
+
 import { getMediaFile, getLogsForFile } from "@/lib/data";
 import type { LogEntry } from "@/lib/types";
 import { notFound } from "next/navigation";
@@ -138,13 +139,13 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[300px] w-full rounded-md border p-4 font-mono text-sm">
-                    {logs.map((log, index) => (
+                    {logs.length > 0 ? logs.map((log, index) => (
                       <div key={index} className="flex items-start gap-4 mb-2">
                         <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleTimeString()}</span>
                         <LogLevelBadge level={log.level} />
                         <span className="flex-1 break-all">{log.message}</span>
                       </div>
-                    ))}
+                    )) : <p className="text-muted-foreground">No logs found for this file.</p>}
                    </ScrollArea>
                 </CardContent>
             </Card>
@@ -173,9 +174,6 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                     <DetailRow icon={<Clock className="h-4 w-4"/>} label="Last Compressed">
                         {file.lastCompressed === "N/A" ? "N/A" : new Date(file.lastCompressed).toLocaleString()}
                     </DetailRow>
-                     <DetailRow icon={<Calendar className="h-4 w-4"/>} label="Next Compression">
-                         {file.nextCompression === "N/A" ? "N/A" : new Date(file.nextCompression).toLocaleDateString()}
-                    </DetailRow>
                 </CardContent>
             </Card>
             <Card>
@@ -188,7 +186,7 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                 <CardContent className="space-y-1">
                     <Separator className="mb-2"/>
                     <StatusRow icon={<HardDrive className="h-4 w-4" />} label="NAS Backup" status={file.nasBackup} />
-                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="Google Photos" status={file.googlePhotosBackup} />
+                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="Google Drive" status={file.googlePhotosBackup} />
                     <StatusRow icon={<Cloud className="h-4 w-4" />} label="iCloud" status={file.icloudUpload} />
                 </CardContent>
             </Card>

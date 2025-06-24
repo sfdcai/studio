@@ -1,3 +1,4 @@
+
 {
   "appName": "MediaFlow",
   "isDarkMode": false,
@@ -9,6 +10,7 @@
   "rcloneRemote": "gdrive",
   "drivePath": "/Apps/MediaFlow/processed",
   "icloudUser": "",
+  "icloudFolderStructure": "{created_date:%Y/%m/%d}",
   "processLimit": 1000,
   "jpgQualityMedium": 85,
   "jpgQualityLow": 75,
@@ -20,6 +22,5 @@
   "aiAllowStats": false,
   "aiAllowSettings": false,
   "compressionEnabled": true,
-  "uploadEnabled": true,
-  "icloudFolderStructure": "{created_date:%Y/%m/%d}"
+  "uploadEnabled": true
 }

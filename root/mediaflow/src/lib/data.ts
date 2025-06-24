@@ -14,7 +14,6 @@ function mapRowToMediaFile(row: any): MediaFile {
         camera: row.camera || 'Unknown',
         createdDate: row.created_date,
         lastCompressed: row.last_compressed_date || "N/A",
-        nextCompression: row.next_compression_date || "N/A",
         nasBackup: !!row.nas_backup_status,
         googlePhotosBackup: !!row.gphotos_backup_status,
         icloudUpload: !!row.icloud_upload_status,
@@ -31,12 +30,12 @@ export async function getMediaFiles(): Promise<MediaFile[]> {
     return rows.map(mapRowToMediaFile);
 }
 
-export async function getMediaFile(id: string): Promise<MediaFile> {
+export async function getMediaFile(id: string): Promise<MediaFile | null> {
     const db = await getDb();
     const row = await db.get('SELECT * FROM files WHERE id = ?', id);
     
     if (!row) {
-        notFound();
+        return null;
     }
     return mapRowToMediaFile(row);
 }

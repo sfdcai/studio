@@ -40,7 +40,6 @@ export type MediaFile = {
   camera: string,
   createdDate: string
   lastCompressed: string
-  nextCompression: string
   nasBackup: boolean
   googlePhotosBackup: boolean
   icloudUpload: boolean

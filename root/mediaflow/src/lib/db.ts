@@ -20,7 +20,15 @@ export async function getDb() {
 
   // Ensure the directory for the database file exists before trying to open it.
   const dir = path.dirname(dbPath);
-  await fs.mkdir(dir, { recursive: true });
+  try {
+      await fs.mkdir(dir, { recursive: true });
+  } catch (err: any) {
+      console.error(`Failed to create database directory at ${dir}. This may be a permissions issue.`);
+      // Re-throwing the error is important so the server startup fails clearly
+      // if it cannot create the necessary directory structure.
+      throw new Error(`Database directory creation failed: ${err.message}`);
+  }
+
 
   db = await open({
     filename: dbPath,
@@ -44,7 +52,6 @@ async function initDb(db: Database) {
       camera TEXT,
       created_date TEXT NOT NULL,
       last_compressed_date TEXT,
-      next_compression_date TEXT,
       nas_backup_status INTEGER DEFAULT 0,
       gphotos_backup_status INTEGER DEFAULT 0,
       icloud_upload_status INTEGER DEFAULT 0,
@@ -76,9 +83,4 @@ async function initDb(db: Database) {
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('duplicates_found', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('storage_saved_mb', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('processing_errors', 0)");
-  
-  // This stat is not set by the script but is useful for dashboard queries.
-  // We'll update it periodically or via a trigger if needed.
-  const fileCount = await db.get('SELECT COUNT(*) as count FROM files');
-  await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('total_files', ?)", fileCount.count);
 }

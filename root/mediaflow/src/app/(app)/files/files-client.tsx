@@ -145,15 +145,6 @@ export const columns: ColumnDef<MediaFile>[] = [
     },
   },
   {
-    accessorKey: "nextCompression",
-    header: "Next Compression",
-    cell: ({ row }) => {
-       const dateString = row.getValue("nextCompression") as string;
-      if (dateString === "N/A") return <div className="text-center">-</div>;
-      return <div className="text-sm">{new Date(dateString).toLocaleDateString()}</div>
-    },
-  },
-  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
@@ -186,7 +177,9 @@ export function FileExplorerClient({ data }: { data: MediaFile[] }) {
     []
   )
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+    React.useState<VisibilityState>({
+        "lastCompressed": false,
+    })
   const [rowSelection, setRowSelection] = React.useState({})
   const [date, setDate] = React.useState<Date>()
 
