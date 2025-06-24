@@ -44,7 +44,7 @@ const defaultSettings: Settings = {
   archiveDir: "/data/nas/archive",
   processedDir: "/data/nas/processed",
   logDir: "/data/nas/logs",
-  dbPath: "media_library.sqlite",
+  dbPath: "./media_library.sqlite",
   rcloneRemote: "gdrive",
   drivePath: "/Apps/MediaFlow/processed",
   icloudUser: "",
