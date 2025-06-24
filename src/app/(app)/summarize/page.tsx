@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useFormStatus } from "react-dom";
 import { useActionState, useEffect } from "react";
-import { handleAnalysis, State } from "./actions";
+import { handleAnalysis, State } from "@/app/(app)/summarize/actions";
 import { Button } from "@/components/ui/button";
 import {
     Card,

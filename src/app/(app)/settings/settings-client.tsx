@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -21,7 +22,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { KeyRound, Files, BarChart3, Settings as SettingsIcon, UploadCloud, Zap } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { type Settings, handleSaveAppSettings, handleSaveBackendSettings } from "./actions"
+import { type Settings, handleSaveAppSettings, handleSaveBackendSettings } from "@/app/(app)/settings/actions"
 import { Separator } from "@/components/ui/separator"
 
 type SettingsClientProps = {
@@ -146,6 +147,13 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                          <div className="space-y-2">
                             <Label htmlFor="icloudUser">Apple ID</Label>
                             <Input id="icloudUser" placeholder="apple@id.com" value={settings.icloudUser} onChange={handleInputChange} />
+                         </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="icloudFolderStructure">Folder Structure</Label>
+                            <Input id="icloudFolderStructure" placeholder="{created_date:%Y/%m/%d}" value={settings.icloudFolderStructure} onChange={handleInputChange} />
+                             <p className="text-xs text-muted-foreground">
+                                Format for subdirectories. Leave blank for default.
+                            </p>
                          </div>
                     </div>
                      <div className="space-y-4 p-4 border rounded-lg">
