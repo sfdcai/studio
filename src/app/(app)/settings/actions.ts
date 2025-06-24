@@ -1,6 +1,8 @@
+
 "use server";
 
-import { getSettings, saveSettings, type Settings, generateAndSaveConfig } from "@/lib/settings";
+import { getSettings, saveSettings, generateAndSaveConfig } from "@/lib/settings";
+import type { Settings } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import fs from 'fs/promises';
 import path from 'path';

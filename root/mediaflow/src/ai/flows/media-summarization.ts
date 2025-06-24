@@ -11,7 +11,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { MediaFile, getStats } from '@/lib/data';
 import type { Settings } from '@/lib/types';
 
 const SystemAnalysisInputSchema = z.object({
@@ -87,10 +86,10 @@ const analyzeSystemFlow = ai.defineFlow(
     inputSchema: SystemAnalysisInputSchema,
     outputSchema: SystemAnalysisOutputSchema,
   },
-  async (input) => {
+  async (input: SystemAnalysisInput) => {
     // Sanitize settings to remove sensitive data before sending to the prompt
     if (input.settings) {
-      input.settings.googleAiApiKey = undefined;
+      (input.settings as Settings).googleAiApiKey = "";
     }
 
     // Limit the number of files sent to the prompt to avoid excessive token usage

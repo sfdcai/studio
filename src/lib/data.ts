@@ -1,39 +1,7 @@
 
 import { notFound } from 'next/navigation';
 import { getDb } from './db';
-
-export type MediaFile = {
-  id: string
-  type: "Image" | "Video"
-  originalSize: number
-  compressedSize: number
-  status: "pending" | "processing" | "success" | "failed"
-  camera: string,
-  createdDate: string
-  lastCompressed: string
-  nextCompression: string
-  nasBackup: boolean
-  googlePhotosBackup: boolean
-  icloudUpload: boolean
-  fileName: string,
-  stagingPath?: string,
-  archivePath?: string,
-  processedPath?: string,
-}
-
-export type LogEntry = {
-    id: number;
-    file_id: number | null;
-    timestamp: string;
-    level: 'INFO' | 'ERROR' | 'WARN';
-    message: string;
-}
-
-export type ProcessingHistoryPoint = {
-    name: string;
-    processed: number;
-    failed: number;
-}
+import type { MediaFile, LogEntry, ProcessingHistoryPoint } from './types';
 
 function mapRowToMediaFile(row: any): MediaFile {
     return {
