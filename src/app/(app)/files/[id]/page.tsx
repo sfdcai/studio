@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Camera, Clock, HardDrive, Zap, Tag, Cloud, History, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import path from "path";
-import fs from "fs";
 
 const DetailRow = ({ icon, label, children }: { icon: React.ReactNode, label: string, children: React.ReactNode }) => (
   <>
@@ -110,6 +108,10 @@ const generateProcessingHistory = (file: MediaFile) => {
 
 export default async function FileDetailsPage({ params }: { params: { id: string } }) {
   const file = await getMediaFile(params.id);
+
+  if (!file) {
+      notFound();
+  }
 
   const statusVariant = {
     "success": "default",

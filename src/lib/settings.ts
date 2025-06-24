@@ -52,6 +52,7 @@ export async function getSettings(): Promise<Settings> {
   try {
     const fileContent = await fs.readFile(settingsFilePath, 'utf-8');
     const loadedSettings = JSON.parse(fileContent);
+    // Merge with defaults to ensure all keys are present
     return { ...defaultSettings, ...loadedSettings };
   } catch (error) {
     console.error("Error reading settings file, returning defaults:", error);
@@ -61,5 +62,6 @@ export async function getSettings(): Promise<Settings> {
 
 export async function saveSettings(settings: Settings): Promise<void> {
   await ensureSettingsFileExists();
-  await fs.writeFile(settingsFilePath, JSON.stringify(settings, null, 2), 'utf-8');
+  const settingsJson = JSON.stringify(settings, null, 2);
+  await fs.writeFile(settingsFilePath, settingsJson, 'utf-8');
 }
