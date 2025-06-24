@@ -1,4 +1,4 @@
-import { getSettings, handleSaveAppSettings, handleSaveBackendSettings } from "@/app/(app)/settings/actions";
+import { getSettings, handleSaveAppSettings, handleSaveBackendSettings } from "./actions";
 import { SettingsClient } from "./settings-client";
 
 export default async function SettingsPage() {

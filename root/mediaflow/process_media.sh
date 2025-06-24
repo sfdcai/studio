@@ -7,7 +7,6 @@
 set -e
 
 # --- Default Config Path ---
-# The script expects the config file to be in the same directory it is run from.
 CONFIG_FILE_PATH="config.conf"
 
 # --- Parse Command-Line Arguments ---

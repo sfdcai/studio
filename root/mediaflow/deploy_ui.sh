@@ -30,10 +30,7 @@ REPO_URL="git@github.com:sfdcai/studio.git"
 APP_DIR="/root/mediaflow"
 PM2_APP_NAME="mediaflow-app"
 SSH_CONFIRM_FILE="$HOME/.ssh/github_key_verified"
-# This gets the directory where the script *itself* is located,
-# which is crucial for finding other scripts in the repo.
 DEPLOY_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
-
 
 # --- Style Functions ---
 GREEN='\033[0;32m'
@@ -148,7 +145,6 @@ if [ -d "$APP_DIR/.git" ]; then
     git pull
 else
     echo "Cloning new repository..."
-    # Add github's key to known_hosts to prevent interactive prompt
     ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
     git clone $REPO_URL $APP_DIR
 fi
@@ -156,7 +152,6 @@ fi
 cd $APP_DIR
 
 # Copy essential backend scripts into app directory to ensure they can be found by the UI
-# This is a critical step for the application to function.
 echo -e "\n${GREEN}---> Copying backend scripts into application directory...${NC}"
 cp "$DEPLOY_SCRIPT_DIR/run_all.sh" .
 cp "$DEPLOY_SCRIPT_DIR/process_media.sh" .

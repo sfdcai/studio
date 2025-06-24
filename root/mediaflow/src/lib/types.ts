@@ -55,3 +55,11 @@ export type ProcessingHistoryPoint = {
     processed: number;
     failed: number;
 }
+
+export type Prerequisite = {
+    name: string;
+    command: string;
+    status: 'Installed' | 'Not Found';
+    path?: string;
+    helpText: string;
+};

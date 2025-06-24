@@ -2,20 +2,27 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle, XCircle, HardDrive } from "lucide-react";
-import { getSystemStatus, type Prerequisite } from '@/app/(app)/dashboard/actions';
+import { getSystemStatus } from '@/app/(app)/dashboard/actions';
+import type { Prerequisite } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 
-export function SystemStatusCard() {
-    const [status, setStatus] = useState<Prerequisite[]>([]);
-    const [loading, setLoading] = useState(true);
+type SystemStatusCardProps = {
+    initialStatus: Prerequisite[];
+}
+
+export function SystemStatusCard({ initialStatus }: SystemStatusCardProps) {
+    const [status, setStatus] = useState<Prerequisite[]>(initialStatus);
+    const [loading, setLoading] = useState(initialStatus.length === 0);
 
     useEffect(() => {
-        getSystemStatus().then(data => {
-            setStatus(data);
-            setLoading(false);
-        });
-    }, []);
+        if (loading) {
+            getSystemStatus().then(data => {
+                setStatus(data);
+                setLoading(false);
+            });
+        }
+    }, [loading]);
 
     return (
         <Card>
