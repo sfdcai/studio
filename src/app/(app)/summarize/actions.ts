@@ -2,7 +2,7 @@
 
 import { analyzeSystem } from "@/ai/flows/system-analysis";
 import type { SystemAnalysisOutput } from "@/ai/flows/system-analysis";
-import { getSettings } from "@/lib/settings";
+import { getSettings } from "@/app/(app)/settings/actions";
 import { getMediaFiles, getStats } from "@/lib/data";
 
 export type State = {
