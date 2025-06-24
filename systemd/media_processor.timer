@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Media Processor every hour
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Unit=media_processor.service
+
+[Install]
+WantedBy=timers.target

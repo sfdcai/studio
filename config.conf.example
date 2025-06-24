@@ -1,0 +1,37 @@
+# =================================================
+#  Configuration for Media Processing Script
+# =================================================
+
+# --- Apple iCloud Credentials ---
+# Your Apple ID (email address)
+APPLE_ID="your_apple_id@email.com"
+
+# --- Directory Paths ---
+# IMPORTANT: The DB_PATH must match the location of the database file in your Next.js project.
+# By default, it's in the root of the project.
+BASE_DIR="/path/to/your/project/automated-media-server"
+STAGING_DIR="${BASE_DIR}/public/media"
+ARCHIVE_DIR="${BASE_DIR}/archive"
+PROCESSED_DIR="${BASE_DIR}/processed_for_upload"
+LOG_DIR="${BASE_DIR}/logs"
+DB_PATH="${BASE_DIR}/media_library.sqlite"
+
+# --- Rclone Configuration ---
+# The name of your rclone remote for the optimized archive
+RCLONE_REMOTE="gdrive"
+# The destination path within the remote
+RCLONE_DEST_PATH="My Optimized Media"
+
+# --- Processing Limits ---
+# Set the maximum number of files to process in a single run.
+PROCESS_LIMIT="1000"
+
+# --- Image Compression Quality (JPEG) ---
+JPG_QUAL_MED="85"
+JPG_QUAL_LOW="75"
+
+# --- Video Compression Quality (CRF for H.265) ---
+VID_CRF_1080p="24"
+VID_CRF_720p="26"
+VID_CRF_360p="28"
+VID_CRF_270p="30"
