@@ -44,7 +44,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { type MediaFile } from "@/lib/data"
 
 
@@ -72,12 +72,10 @@ export const columns: ColumnDef<MediaFile>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "id",
+    accessorKey: "fileName",
     header: "Filename",
     cell: ({ row }) => {
-        const file = row.original;
-        const extension = file.type === "Image" ? "jpg" : "mp4";
-        return <div className="capitalize font-mono text-xs">{file.id}.{extension}</div>
+        return <div className="capitalize font-mono text-xs">{row.original.fileName}</div>
     },
   },
   {
@@ -94,6 +92,12 @@ export const columns: ColumnDef<MediaFile>[] = [
       )
     },
     cell: ({ row }) => <div>{new Date(row.getValue("createdDate")).toLocaleDateString()}</div>,
+    filterFn: (row, columnId, value) => {
+      if (!value) return true;
+      const date = new Date(row.getValue(columnId));
+      const filterValue = new Date(value);
+      return date.toDateString() === filterValue.toDateString();
+    }
   },
   {
     accessorKey: "status",
@@ -206,9 +210,9 @@ export function FileExplorerClient({ data }: { data: MediaFile[] }) {
   
   React.useEffect(() => {
     if (date) {
-      table.getColumn("createdDate")?.setFilterValue(format(date, "yyyy-MM-dd"));
+      table.getColumn("createdDate")?.setFilterValue(date.toISOString().split('T')[0]);
     } else {
-      table.getColumn("createdDate")?.setFilterValue("");
+      table.getColumn("createdDate")?.setFilterValue(undefined);
     }
   }, [date, table]);
 
@@ -217,9 +221,9 @@ export function FileExplorerClient({ data }: { data: MediaFile[] }) {
       <div className="flex items-center justify-between py-4">
         <Input
           placeholder="Filter files by name..."
-          value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("fileName")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("id")?.setFilterValue(event.target.value)
+            table.getColumn("fileName")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

@@ -49,7 +49,7 @@ const LogLevelBadge = ({ level }: { level: string }) => {
     return <Badge variant={variant as any} className="w-16 justify-center">{level}</Badge>
 }
 
-const generateLogsForFile = (file: MediaFile, fileNameWithExt: string) => {
+const generateLogsForFile = (file: MediaFile) => {
     const logs: { level: string, message: string, timestamp: string }[] = [];
     const baseTimestamp = new Date(file.createdDate);
 
@@ -58,33 +58,33 @@ const generateLogsForFile = (file: MediaFile, fileNameWithExt: string) => {
         logs.push({ level, message, timestamp });
     };
 
-    addLog("INFO", `Found new file: ${fileNameWithExt}`, 1);
-    addLog("INFO", `Starting processing for ${fileNameWithExt}.`, 2);
+    addLog("INFO", `Found new file: ${file.fileName}`, 1);
+    addLog("INFO", `Starting processing for ${file.fileName}.`, 2);
 
     switch(file.status) {
         case 'success':
-            addLog("INFO", `Compression successful for ${fileNameWithExt}. Saved ${(file.originalSize - file.compressedSize).toFixed(2)} MB.`, 5);
+            addLog("INFO", `Compression successful for ${file.fileName}. Saved ${(file.originalSize - file.compressedSize).toFixed(2)} MB.`, 5);
             if (file.googlePhotosBackup) {
-                addLog("INFO", `Uploading to Google Photos for ${fileNameWithExt}.`, 6);
-                addLog("INFO", `Upload to Google Photos successful for ${fileNameWithExt}.`, 10);
+                addLog("INFO", `Uploading to Google Photos for ${file.fileName}.`, 6);
+                addLog("INFO", `Upload to Google Photos successful for ${file.fileName}.`, 10);
             }
             if (file.icloudUpload) {
-                addLog("INFO", `Uploading to iCloud for ${fileNameWithExt}.`, 11);
-                addLog("INFO", `Upload to iCloud successful for ${fileNameWithExt}.`, 15);
+                addLog("INFO", `Uploading to iCloud for ${file.fileName}.`, 11);
+                addLog("INFO", `Upload to iCloud successful for ${file.fileName}.`, 15);
             } else {
-                addLog("WARN", `iCloud sync disabled. Skipping iCloud upload for ${fileNameWithExt}.`, 11);
+                addLog("WARN", `iCloud sync disabled. Skipping iCloud upload for ${file.fileName}.`, 11);
             }
-            addLog("INFO", `Processing complete for ${fileNameWithExt}.`, 16);
+            addLog("INFO", `Processing complete for ${file.fileName}.`, 16);
             break;
         case 'failed':
-             addLog("ERROR", `Compression failed for ${fileNameWithExt}: Processing error.`, 5);
-             addLog("INFO", `Moving ${fileNameWithExt} to error directory.`, 6);
+             addLog("ERROR", `Compression failed for ${file.fileName}: Processing error.`, 5);
+             addLog("INFO", `Moving ${file.fileName} to error directory.`, 6);
             break;
         case 'processing':
-            addLog("INFO", `Compression in progress for ${fileNameWithExt}...`, 5);
+            addLog("INFO", `Compression in progress for ${file.fileName}...`, 5);
             break;
         case 'pending':
-            addLog("INFO", `File ${fileNameWithExt} is queued for processing.`, 3);
+            addLog("INFO", `File ${file.fileName} is queued for processing.`, 3);
             break;
     }
     return logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -108,23 +108,9 @@ const generateProcessingHistory = (file: MediaFile) => {
     return history;
 }
 
-async function findFileExtension(id: string): Promise<string> {
-    const mediaDir = path.join(process.cwd(), 'public/media');
-    try {
-        const files = await fs.promises.readdir(mediaDir);
-        const foundFile = files.find(f => path.parse(f).name === id);
-        return foundFile ? path.parse(foundFile).ext : '';
-    } catch (e) {
-        console.error("Could not read media directory", e);
-        return '';
-    }
-}
-
 export default async function FileDetailsPage({ params }: { params: { id: string } }) {
   const file = await getMediaFile(params.id);
-  const extension = await findFileExtension(params.id);
-  const fileNameWithExt = `${file.id}${extension}`;
-  
+
   const statusVariant = {
     "success": "default",
     "processing": "secondary",
@@ -133,7 +119,7 @@ export default async function FileDetailsPage({ params }: { params: { id: string
 
   const savings = file.originalSize > 0 && file.status === 'success' ? Math.round(((file.originalSize - file.compressedSize) / file.originalSize) * 100) : 0;
   
-  const logs = generateLogsForFile(file, fileNameWithExt);
+  const logs = generateLogsForFile(file);
   const history = generateProcessingHistory(file);
 
   return (
@@ -145,18 +131,18 @@ export default async function FileDetailsPage({ params }: { params: { id: string
             <span className="sr-only">Back to files</span>
           </Link>
         </Button>
-        <h2 className="text-3xl font-bold tracking-tight truncate">{fileNameWithExt}</h2>
+        <h2 className="text-3xl font-bold tracking-tight truncate">{file.fileName}</h2>
       </div>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
             <Card className="overflow-hidden">
                 <CardContent className="p-0">
                 <Image
-                    alt={`Preview for ${fileNameWithExt}`}
+                    alt={`Preview for ${file.fileName}`}
                     className="aspect-video w-full object-cover"
                     data-ai-hint="product image"
                     height={600}
-                    src={`/media/${fileNameWithExt}`}
+                    src={`/media/${file.fileName}`}
                     width={800}
                 />
                 </CardContent>

@@ -7,8 +7,7 @@ const generateLogs = (data: MediaFile[]) => {
   const allLogs: { level: string, message: string, timestamp: string }[] = [];
   
   data.forEach(file => {
-      const fileExtension = file.type === 'Image' ? 'jpg' : 'mp4';
-      const fileName = `${file.id}.${fileExtension}`;
+      const fileName = file.fileName;
       const baseTimestamp = new Date(file.createdDate);
 
       const addLog = (level: string, message: string, offsetSeconds: number) => {
