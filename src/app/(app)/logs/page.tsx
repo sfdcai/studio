@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { getMediaFiles, type MediaFile } from "@/lib/data"
 
+export const revalidate = 0; // Disable caching
+
 const generateLogs = (data: MediaFile[]) => {
   const allLogs: { level: string, message: string, timestamp: string }[] = [];
   

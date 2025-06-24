@@ -9,6 +9,8 @@ import { ArrowLeft, Calendar, Camera, Clock, HardDrive, Zap, Tag, Cloud, History
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+export const revalidate = 0; // Disable caching
+
 const DetailRow = ({ icon, label, children }: { icon: React.ReactNode, label: string, children: React.ReactNode }) => (
   <>
     <div className="flex items-center justify-between py-3">
@@ -144,7 +146,7 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                     className="aspect-video w-full object-cover"
                     data-ai-hint="product image"
                     height={600}
-                    src={`/media/${file.fileName}`}
+                    src={`/media/${encodeURIComponent(file.fileName)}`}
                     width={800}
                 />
                 </CardContent>

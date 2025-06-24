@@ -1,6 +1,8 @@
 import { getMediaFiles } from '@/lib/data';
 import { FileExplorerClient } from './files-client';
 
+export const revalidate = 0; // Disable caching
+
 export default async function FileExplorerPage() {
   const data = await getMediaFiles();
 

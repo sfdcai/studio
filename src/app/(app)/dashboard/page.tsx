@@ -1,6 +1,8 @@
 import { getMediaFiles } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
 
+export const revalidate = 0; // Disable caching
+
 const processingHistoryData = [
   { name: 'Mon', processed: 20, failed: 1 },
   { name: 'Tue', processed: 35, failed: 2 },
