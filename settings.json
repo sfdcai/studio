@@ -19,6 +19,8 @@
   "aiAllowMetadata": false,
   "aiAllowStats": false,
   "aiAllowSettings": false,
+  "compressionEnabled": true,
+  "uploadEnabled": true,
   "nasPath": "/mnt/nas/media/incoming",
   "compression": 60,
   "year1Compression": "1080p",

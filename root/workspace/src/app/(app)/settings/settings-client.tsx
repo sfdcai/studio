@@ -19,7 +19,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { KeyRound, Files, BarChart3, Settings as SettingsIcon } from "lucide-react"
+import { KeyRound, Files, BarChart3, Settings as SettingsIcon, UploadCloud, Zap } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { type Settings, handleSaveAppSettings, handleSaveBackendSettings } from "./actions"
 import { Separator } from "@/components/ui/separator"
@@ -173,6 +173,28 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                         Maximum number of files to process in a single backend run.
                     </p>
                 </div>
+                <Separator/>
+                 <div className="space-y-4 pt-4">
+                    <h4 className="text-md font-medium">Feature Toggles</h4>
+                     <p className="text-sm text-muted-foreground">
+                        Disable features for debugging purposes. For example, turn off compression to quickly see if files are being discovered and added to the database.
+                    </p>
+                    <div className="flex items-center space-x-2">
+                        <Switch id="compressionEnabled" checked={settings.compressionEnabled} onCheckedChange={handleSwitchChange('compressionEnabled')} />
+                        <Label htmlFor="compressionEnabled" className="flex items-center gap-2">
+                            <Zap className="h-4 w-4"/>
+                            Enable Compression
+                        </Label>
+                    </div>
+                     <div className="flex items-center space-x-2">
+                        <Switch id="uploadEnabled" checked={settings.uploadEnabled} onCheckedChange={handleSwitchChange('uploadEnabled')} />
+                        <Label htmlFor="uploadEnabled" className="flex items-center gap-2">
+                            <UploadCloud className="h-4 w-4"/>
+                            Enable Cloud Upload
+                        </Label>
+                    </div>
+                 </div>
+                 <Separator/>
                  <div className="grid md:grid-cols-2 gap-6 pt-4">
                      <div className="space-y-4">
                         <h4 className="font-semibold">JPEG Quality (1-100)</h4>
