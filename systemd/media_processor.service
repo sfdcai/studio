@@ -4,7 +4,10 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-# IMPORTANT: Update the path to your run_all.sh script
-ExecStart=/usr/local/bin/run_all.sh
-# IMPORTANT: Update the user to the one who owns the project files
-User=your_username
+# The working directory is the app's root, so the script can find its config.
+WorkingDirectory=/root/mediaflow
+# The user must have permissions to execute this script.
+ExecStart=/root/mediaflow/run_all.sh
+
+[Install]
+WantedBy=multi-user.target

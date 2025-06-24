@@ -1,12 +1,13 @@
 # Automated Media Management System
 
-This project provides a complete, automated pipeline for managing a large personal media library. It combines a powerful set of backend shell scripts with a modern Next.js web interface for monitoring.
+This project provides a complete, automated pipeline for managing a large personal media library. It combines a powerful set of backend shell scripts with a modern Next.js web interface for monitoring and configuration.
 
-The system uses a Linux server to automatically download all photos and videos from an iCloud Photos account, deduplicates them against a central database, archives the originals to a local NAS, and uploads processed versions to a separate, reliable cloud archive (Google Drive).
+The system uses a Linux server to automatically download photos and videos from an iCloud Photos account, deduplicates them against a central database, archives the originals to a local NAS, and uploads processed versions to a separate, reliable cloud archive (Google Drive).
 
 ## Features ✨
 
 *   **Web UI Dashboard:** A modern Next.js interface to view the status of all files, see logs, and monitor processing in real-time.
+*   **Centralized Configuration:** Manage all backend script settings directly from the web UI.
 *   **Server-Side Sync:** Backend scripts automatically pull all media directly from iCloud Photos.
 *   **Database-Driven:** Uses an SQLite database as the single source of truth, tracking every file, its metadata, and processing status.
 *   **Bulletproof Deduplication:** Calculates a unique hash for each file to prevent duplicates from ever entering your archive.
@@ -30,67 +31,40 @@ These steps configure the server to automatically download and process your medi
 *   `git` installed on the server to clone this repository.
 *   Python 3 and `pip` (for the `icloudpd` backend script).
 
-#### 2. Clone the Repository
+#### 2. Run the Backend Environment Setup Script
+Execute the `setup_media_server.sh` script. This script installs all required software for media processing (`rclone`, `ffmpeg`, `icloudpd`, etc.) and initializes the database.
 ```bash
-git clone <your-repository-url>
-cd your-repository-folder # e.g., cd automated-media-server
-```
+# Clone the repository first if you haven't already
+# git clone <your-repository-url>
+# cd your-repository-folder
 
-#### 3. Mount Your NAS
-Before running the setup, ensure your main NAS storage is mounted on the server. The scripts assume it is mounted at a stable path (e.g., `/data/nas`).
-
-#### 4. Create Your Configuration
-Copy the example config file and edit it to match your environment. **You must add your Apple ID and configure your directory paths.**
-```bash
-cp config.conf.example config.conf
-nano config.conf
-```
-
-#### 5. Run the Backend Environment Setup Script
-This script installs all required software for media processing (`rclone`, `ffmpeg`, `icloudpd`, etc.) and initializes the database.
-```bash
 chmod +x setup_media_server.sh
 sudo ./setup_media_server.sh
 ```
 
-#### 6. Initial iCloud Authentication (CRITICAL STEP)
-You must log in to iCloud interactively **once** to create a session cookie for the backend scripts.
+#### 3. Initial iCloud Authentication (CRITICAL STEP)
+Before the automated scripts can work, you must log in to iCloud interactively **once** to create a session cookie. You will need to know your iCloud staging directory path, which you will configure in the Web UI in Part 2.
 ```bash
 # Run this command and follow the prompts for your password and 2FA code.
-# Use the staging directory path from your config.conf
-icloudpd --directory /data/nas/staging --username your_apple_id@email.com
+# Use the staging directory path you plan to set in the UI (e.g., /data/nas/staging)
+icloudpd --directory /path/to/your/staging_dir --username your_apple_id@email.com
 ```
 Once it starts downloading, you can press `Ctrl+C`. The authentication session is now saved, and the automated scripts will be able to run non-interactively.
 
-**Note:** This session will expire after a few weeks or months. You will need to run this command again when the automated script fails due to authentication errors.
+**Note:** This session may expire after a few weeks or months. You will need to run this command again when the automated script fails due to authentication errors.
 
-#### 7. Configure Rclone
-Run `rclone config` to set up your Google Drive remote (or any other cloud provider). Give it a name (e.g., `gdrive`). Make sure the `RCLONE_REMOTE` value in your `config.conf` matches the name you chose.
-
-#### 8. Automate with `systemd`
-This will configure the backend scripts to run automatically every hour.
-```bash
-# Move scripts to a system path
-sudo cp run_all.sh process_media.sh /usr/local/bin/
-sudo chmod +x /usr/local/bin/run_all.sh /usr/local/bin/process_media.sh
-
-# Copy systemd service/timer files
-sudo cp systemd/media_processor.* /etc/systemd/system/
-sudo nano /etc/systemd/system/media_processor.service # Edit ExecStart path if you changed it
-
-# Enable and start the timer
-sudo systemctl daemon-reload
-sudo systemctl enable media_processor.timer
-sudo systemctl start media_processor.timer
-```
+#### 4. Configure Rclone
+Run `rclone config` to set up your Google Drive remote (or any other cloud provider). Give it a name (e.g., `gdrive`). You will enter this name in the Web UI settings.
 
 ---
 
-### **Part 2: Frontend Setup (Web UI Deployment)**
+### **Part 2: Frontend Setup & Configuration (Web UI)**
 
-This section describes how to deploy the Next.js web application using the provided `deploy_ui.sh` script. This script automates the installation of Node.js, dependencies, and configures the `pm2` process manager to run the app in a production environment.
+This section describes how to deploy the Next.js web application and configure the entire system.
 
-#### 1. Configure the Deployment Script
+#### 1. Configure and Run the Deployment Script
+The `deploy_ui.sh` script automates the installation of Node.js, dependencies, and configures the `pm2` process manager to run the app in a production environment.
+
 Before running the script, you must edit it to point to your repository.
 ```bash
 nano deploy_ui.sh
@@ -104,23 +78,36 @@ REPO_URL="git@github.com:your_username/your_repo.git"
 REPO_URL="git@github.com:your-name/automated-media-server.git"
 ```
 
-#### 2. Run the Deployment Script
-Execute the script as root. It will handle system updates, Node.js installation, cloning the repo, building the app, and running it with `pm2`.
+Now, execute the script. It will handle system updates, Node.js installation, cloning the repo, building the app, and running it with `pm2`.
 ```bash
 chmod +x deploy_ui.sh
 sudo ./deploy_ui.sh
 ```
 The script will prompt you once to add the server's SSH key to your GitHub repository as a "Deploy Key". Follow the on-screen instructions.
 
-#### 3. Accessing the UI
-Once the script is finished, the application will be running on port 3000 by default (the standard for `npm start`). You can access it at `http://<your_server_ip>:3000`.
+#### 2. Configure the System via the Web UI
+Once the script is finished, the application will be running.
+*   **Access the UI:** Open your browser to `http://<your_server_ip>:3000`.
+*   **Navigate to Settings:** Go to the "Settings" page in the application.
+*   **Fill Out All Fields:** Carefully fill out all the settings, especially the "Backend Paths" and "Sync Services" sections. The paths you enter here **must** match the directories available on your server.
+*   **Save Settings:** Click "Save Storage Settings". This will create the `config.conf` file in your project directory that the backend scripts need to run.
 
-To manage the running application, you can use these `pm2` commands:
-*   Check status: `sudo pm2 list`
-*   View logs: `sudo pm2 logs mediaflow-app`
-*   Restart the app: `sudo pm2 restart mediaflow-app`
+#### 3. Automate Backend Jobs with `systemd`
+Now that the `config.conf` has been generated by the UI, you can enable the automated backend scripts.
 
-#### 4. Updating the Application
+```bash
+# Copy systemd service/timer files from your project directory
+sudo cp systemd/media_processor.* /etc/systemd/system/
+
+# Enable and start the timer
+sudo systemctl daemon-reload
+sudo systemctl enable media_processor.timer
+sudo systemctl start media_processor.timer
+```
+
+---
+
+### **Part 3: Updating the Application**
 When you make changes to the application code and push them to your GitHub repository, you need to update the running application on your server. The `deploy_ui.sh` script makes this easy.
 
 1.  **Push your code changes** to your main branch on GitHub.

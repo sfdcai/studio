@@ -18,19 +18,12 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { type Settings, handleSaveSettings } from "./actions"
+import { Separator } from "@/components/ui/separator"
 
 type SettingsClientProps = {
   initialSettings: Settings
@@ -39,54 +32,34 @@ type SettingsClientProps = {
 export function SettingsClient({ initialSettings }: SettingsClientProps) {
   const { toast } = useToast()
 
-  // General Settings State
-  const [appName, setAppName] = React.useState(initialSettings.appName)
-  const [isDarkMode, setIsDarkMode] = React.useState(initialSettings.isDarkMode)
+  const [settings, setSettings] = React.useState(initialSettings)
 
-  // Storage Settings State
-  const [nasPath, setNasPath] = React.useState(initialSettings.nasPath)
-  const [drivePath, setDrivePath] = React.useState(initialSettings.drivePath)
-  const [compression, setCompression] = React.useState([initialSettings.compression])
-  const [year1Compression, setYear1Compression] = React.useState(initialSettings.year1Compression)
-  const [year2Compression, setYear2Compression] = React.useState(initialSettings.year2Compression)
-  const [year5Compression, setYear5Compression] = React.useState(initialSettings.year5Compression)
-  const [preserveExif, setPreserveExif] = React.useState(initialSettings.preserveExif)
-  const [icloudSync, setIcloudSync] = React.useState(initialSettings.icloudSync)
-  const [icloudUser, setIcloudUser] = React.useState(initialSettings.icloudUser)
-  const [icloudPass, setIcloudPass] = React.useState(initialSettings.icloudPass)
-  const [dailyLimit, setDailyLimit] = React.useState(initialSettings.dailyLimit.toString())
-  const [deleteYesterday, setDeleteYesterday] = React.useState(initialSettings.deleteYesterday)
-
-  // Security Settings State
-  const [currentPassword, setCurrentPassword] = React.useState("")
-  const [newPassword, setNewPassword] = React.useState("")
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type, checked } = e.target;
+    setSettings(prev => ({
+      ...prev,
+      [id]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
+    }));
+  };
+  
+  const handleSwitchChange = (id: keyof Settings) => (checked: boolean) => {
+    setSettings(prev => ({
+        ...prev,
+        [id]: checked
+    }));
+  };
 
   const onSave = async (category: 'general' | 'storage' | 'security') => {
     let settingsToSave: Partial<Settings> = {};
     let message = "";
     
     if (category === 'general') {
-        settingsToSave = { appName, isDarkMode };
+        settingsToSave = { appName: settings.appName, isDarkMode: settings.isDarkMode };
         message = "General settings have been updated.";
     } else if (category === 'storage') {
-        settingsToSave = {
-            nasPath,
-            drivePath,
-            compression: compression[0],
-            year1Compression,
-            year2Compression,
-            year5Compression,
-            preserveExif,
-            icloudSync,
-            icloudUser,
-            icloudPass,
-            dailyLimit: Number(dailyLimit),
-            deleteYesterday
-        };
-        message = "Storage settings have been updated.";
+        settingsToSave = settings; // Save all settings from the state
+        message = "Storage and backend settings have been updated.";
     } else if (category === 'security') {
-        // Security settings are typically handled differently, not stored in a plain json file.
-        // For this prototype, we will just show a toast.
         toast({
           title: "Settings Saved",
           description: "Security settings have been updated.",
@@ -110,11 +83,15 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
     }
   }
 
+  // Security Settings State - kept separate as they aren't persisted
+  const [currentPassword, setCurrentPassword] = React.useState("")
+  const [newPassword, setNewPassword] = React.useState("")
+
   return (
     <Tabs defaultValue="storage" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="general">General</TabsTrigger>
-        <TabsTrigger value="storage">Storage</TabsTrigger>
+        <TabsTrigger value="storage">Storage & Backend</TabsTrigger>
         <TabsTrigger value="security">Security</TabsTrigger>
       </TabsList>
       <TabsContent value="general">
@@ -128,11 +105,11 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="appName">App Name</Label>
-              <Input id="appName" value={appName} onChange={(e) => setAppName(e.target.value)} />
+              <Input id="appName" value={settings.appName} onChange={handleInputChange} />
             </div>
             <div className="flex items-center space-x-2">
-              <Switch id="dark-mode" checked={isDarkMode} onCheckedChange={setIsDarkMode} />
-              <Label htmlFor="dark-mode">Dark Mode</Label>
+              <Switch id="isDarkMode" checked={settings.isDarkMode} onCheckedChange={handleSwitchChange('isDarkMode')} />
+              <Label htmlFor="isDarkMode">Dark Mode</Label>
             </div>
           </CardContent>
           <CardFooter>
@@ -143,119 +120,110 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
       <TabsContent value="storage">
         <Card>
           <CardHeader>
-            <CardTitle>Storage Configuration</CardTitle>
+            <CardTitle>Storage & Backend Configuration</CardTitle>
             <CardDescription>
-              Manage paths, compression, and cloud sync settings.
+              Manage paths, sync, and processing settings for the backend scripts.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="nasPath">NAS Path</Label>
-              <Input id="nasPath" value={nasPath} onChange={(e) => setNasPath(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="drivePath">Google Drive Path</Label>
-              <Input id="drivePath" value={drivePath} onChange={(e) => setDrivePath(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="compression">Initial Compression Level ({compression[0]}%)</Label>
-              <div className="flex items-center space-x-4">
-                  <span>Low</span>
-                  <Slider id="compression" value={compression} onValueChange={setCompression} max={100} step={1} />
-                  <span>High</span>
-              </div>
-            </div>
 
-            <div className="border-t pt-6 space-y-4">
-              <h3 className="text-lg font-medium">Progressive Compression</h3>
+            {/* Backend Paths */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Backend Paths</h3>
               <p className="text-sm text-muted-foreground">
-                Define how files are re-compressed over time to save more space.
+                Absolute paths on the server where the backend scripts will operate.
               </p>
-              <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                      <Label htmlFor="year-1-compression">After 1 Year</Label>
-                      <Select value={year1Compression} onValueChange={setYear1Compression}>
-                          <SelectTrigger id="year-1-compression" className="w-[180px]">
-                          <SelectValue placeholder="Select quality" />
-                          </SelectTrigger>
-                          <SelectContent>
-                          <SelectItem value="original">Keep Original</SelectItem>
-                          <SelectItem value="1080p">1080p</SelectItem>
-                          <SelectItem value="720p">720p</SelectItem>
-                          <SelectItem value="640p">640p</SelectItem>
-                          </SelectContent>
-                      </Select>
+              <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="stagingDir">Staging Directory</Label>
+                      <Input id="stagingDir" value={settings.stagingDir} onChange={handleInputChange} placeholder="/data/nas/staging"/>
                   </div>
-                  <div className="flex items-center justify-between">
-                      <Label htmlFor="year-2-compression">After 2 Years</Label>
-                      <Select value={year2Compression} onValueChange={setYear2Compression}>
-                          <SelectTrigger id="year-2-compression" className="w-[180px]">
-                          <SelectValue placeholder="Select quality" />
-                          </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="original">Keep Original</SelectItem>
-                              <SelectItem value="1080p">1080p</SelectItem>
-                              <SelectItem value="720p">720p</SelectItem>
-                              <SelectItem value="640p">640p</SelectItem>
-                          </SelectContent>
-                      </Select>
+                  <div className="space-y-2">
+                      <Label htmlFor="archiveDir">Archive Directory</Label>
+                      <Input id="archiveDir" value={settings.archiveDir} onChange={handleInputChange} placeholder="/data/nas/archive"/>
                   </div>
-                  <div className="flex items-center justify-between">
-                      <Label htmlFor="year-5-compression">After 5 Years</Label>
-                      <Select value={year5Compression} onValueChange={setYear5Compression}>
-                          <SelectTrigger id="year-5-compression" className="w-[180px]">
-                          <SelectValue placeholder="Select quality" />
-                          </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="original">Keep Original</SelectItem>
-                              <SelectItem value="1080p">1080p</SelectItem>
-                              <SelectItem value="720p">720p</SelectItem>
-                              <SelectItem value="640p">640p</SelectItem>
-                          </SelectContent>
-                      </Select>
+                  <div className="space-y-2">
+                      <Label htmlFor="processedDir">Processed (for Upload) Directory</Label>
+                      <Input id="processedDir" value={settings.processedDir} onChange={handleInputChange} placeholder="/data/nas/processed"/>
+                  </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="logDir">Log Directory</Label>
+                      <Input id="logDir" value={settings.logDir} onChange={handleInputChange} placeholder="/data/nas/logs"/>
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="dbPath">Database File Path</Label>
+                      <Input id="dbPath" value={settings.dbPath} onChange={handleInputChange} placeholder="/data/nas/media_library.sqlite"/>
                   </div>
               </div>
-               <div className="flex items-center space-x-2 pt-2">
-                  <Switch id="exif-transfer" checked={preserveExif} onCheckedChange={setPreserveExif} />
-                  <Label htmlFor="exif-transfer">Preserve EXIF Data</Label>
-              </div>
-               <p className="text-sm text-muted-foreground pt-1">
-                  Ensures all metadata like camera settings, location, and date are retained during compression.
-               </p>
+            </div>
+            <Separator/>
+            
+            {/* Sync Services */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Sync Services</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4 p-4 border rounded-lg">
+                         <h4 className="font-semibold">iCloud Photos</h4>
+                         <div className="space-y-2">
+                            <Label htmlFor="icloudUser">Apple ID</Label>
+                            <Input id="icloudUser" placeholder="apple@id.com" value={settings.icloudUser} onChange={handleInputChange} />
+                         </div>
+                    </div>
+                     <div className="space-y-4 p-4 border rounded-lg">
+                         <h4 className="font-semibold">Rclone (Google Drive)</h4>
+                         <div className="space-y-2">
+                            <Label htmlFor="rcloneRemote">Rclone Remote Name</Label>
+                            <Input id="rcloneRemote" value={settings.rcloneRemote} onChange={handleInputChange} placeholder="gdrive"/>
+                         </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="drivePath">Destination Path</Label>
+                            <Input id="drivePath" value={settings.drivePath} onChange={handleInputChange} placeholder="My Media/Optimized"/>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            <Separator/>
+
+            {/* Backend Processing */}
+             <div className="space-y-4">
+                <h3 className="text-lg font-medium">Backend Processing</h3>
+                 <div className="space-y-2">
+                    <Label htmlFor="processLimit">Process Limit Per Run</Label>
+                    <Input id="processLimit" type="number" placeholder="1000" value={settings.processLimit} onChange={handleInputChange} className="max-w-xs" />
+                    <p className="text-sm text-muted-foreground">
+                        Maximum number of files to process in a single backend run.
+                    </p>
+                </div>
+                 <div className="grid md:grid-cols-2 gap-6 pt-4">
+                     <div className="space-y-4">
+                        <h4 className="font-semibold">JPEG Quality</h4>
+                         <div className="space-y-2">
+                            <Label htmlFor="jpgQualityMedium">Medium Quality (1-100)</Label>
+                            <Input id="jpgQualityMedium" type="number" value={settings.jpgQualityMedium} onChange={handleInputChange}/>
+                         </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="jpgQualityLow">Low Quality (1-100)</Label>
+                            <Input id="jpgQualityLow" type="number" value={settings.jpgQualityLow} onChange={handleInputChange}/>
+                         </div>
+                     </div>
+                     <div className="space-y-4">
+                         <h4 className="font-semibold">Video Quality (CRF)</h4>
+                         <p className="text-xs text-muted-foreground">H.265 Constant Rate Factor. Lower is better quality. 18-28 is a sane range.</p>
+                         <div className="space-y-2">
+                            <Label htmlFor="vidCRF1080p">1080p CRF</Label>
+                            <Input id="vidCRF1080p" type="number" value={settings.vidCRF1080p} onChange={handleInputChange}/>
+                         </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="vidCRF720p">720p CRF</Label>
+                            <Input id="vidCRF720p" type="number" value={settings.vidCRF720p} onChange={handleInputChange}/>
+                         </div>
+                     </div>
+                 </div>
             </div>
 
-            <div className="border-t pt-6 space-y-4">
-              <h3 className="text-lg font-medium">iCloud Photos</h3>
-               <div className="flex items-center space-x-2">
-                  <Switch id="icloud-sync" checked={icloudSync} onCheckedChange={setIcloudSync} />
-                  <Label htmlFor="icloud-sync">Enable iCloud Upload</Label>
-               </div>
-               <div className="space-y-2">
-                  <Label htmlFor="icloudUser">iCloud Username</Label>
-                  <Input id="icloudUser" placeholder="apple@id.com" value={icloudUser} onChange={(e) => setIcloudUser(e.target.value)} disabled={!icloudSync} />
-               </div>
-               <div className="space-y-2">
-                  <Label htmlFor="icloudPass">App-Specific Password</Label>
-                  <Input id="icloudPass" type="password" value={icloudPass} onChange={(e) => setIcloudPass(e.target.value)} disabled={!icloudSync} />
-               </div>
-               <div className="space-y-2">
-                  <Label htmlFor="daily-limit">Daily Upload Limit</Label>
-                  <Input id="daily-limit" type="number" placeholder="e.g., 1000" value={dailyLimit} onChange={(e) => setDailyLimit(e.target.value)} disabled={!icloudSync} />
-                  <p className="text-sm text-muted-foreground">
-                    Set the maximum number of files to upload to iCloud each day.
-                  </p>
-               </div>
-               <div className="flex items-center space-x-2">
-                  <Switch id="delete-yesterday" checked={deleteYesterday} onCheckedChange={setDeleteYesterday} disabled={!icloudSync} />
-                  <Label htmlFor="delete-yesterday">Delete Yesterday's Files Before Upload</Label>
-               </div>
-               <p className="text-sm text-muted-foreground pt-1">
-                  Ensures a clean slate by removing files from the previous day's sync. Use with caution.
-               </p>
-            </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => onSave('storage')}>Save Storage Settings</Button>
+            <Button onClick={() => onSave('storage')}>Save Storage & Backend Settings</Button>
           </CardFooter>
         </Card>
       </TabsContent>
