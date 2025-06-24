@@ -1,5 +1,7 @@
+
 "use client"
 
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -28,8 +30,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
+  const { toast } = useToast()
+
+  // General Settings State
+  const [appName, setAppName] = React.useState("MediaFlow")
+  const [isDarkMode, setIsDarkMode] = React.useState(false)
+
+  // Storage Settings State
+  const [nasPath, setNasPath] = React.useState("/mnt/nas/media/incoming")
+  const [drivePath, setDrivePath] = React.useState("/Apps/MediaFlow/processed")
+  const [compression, setCompression] = React.useState([60])
+  const [year1Compression, setYear1Compression] = React.useState("1080p")
+  const [year2Compression, setYear2Compression] = React.useState("720p")
+  const [year5Compression, setYear5Compression] = React.useState("640p")
+  const [preserveExif, setPreserveExif] = React.useState(true)
+  const [icloudSync, setIcloudSync] = React.useState(false)
+  const [icloudUser, setIcloudUser] = React.useState("")
+  const [icloudPass, setIcloudPass] = React.useState("")
+  const [dailyLimit, setDailyLimit] = React.useState("1000")
+  const [deleteYesterday, setDeleteYesterday] = React.useState(false)
+
+  // Security Settings State
+  const [currentPassword, setCurrentPassword] = React.useState("")
+  const [newPassword, setNewPassword] = React.useState("")
+
+  const handleSave = (message: string) => {
+    toast({
+      title: "Settings Saved",
+      description: message,
+    })
+  }
+
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between space-y-2 mb-4">
@@ -52,15 +86,15 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="appName">App Name</Label>
-                <Input id="appName" defaultValue="MediaFlow" />
+                <Input id="appName" value={appName} onChange={(e) => setAppName(e.target.value)} />
               </div>
               <div className="flex items-center space-x-2">
-                <Switch id="dark-mode" />
+                <Switch id="dark-mode" checked={isDarkMode} onCheckedChange={setIsDarkMode} />
                 <Label htmlFor="dark-mode">Dark Mode</Label>
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save Changes</Button>
+              <Button onClick={() => handleSave("General settings have been updated.")}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -75,17 +109,17 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="nasPath">NAS Path</Label>
-                <Input id="nasPath" defaultValue="/mnt/nas/media/incoming" />
+                <Input id="nasPath" value={nasPath} onChange={(e) => setNasPath(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="drivePath">Google Drive Path</Label>
-                <Input id="drivePath" defaultValue="/Apps/MediaFlow/processed" />
+                <Input id="drivePath" value={drivePath} onChange={(e) => setDrivePath(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="compression">Initial Compression Level</Label>
+                <Label htmlFor="compression">Initial Compression Level ({compression[0]}%)</Label>
                 <div className="flex items-center space-x-4">
                     <span>Low</span>
-                    <Slider id="compression" defaultValue={[60]} max={100} step={1} />
+                    <Slider id="compression" value={compression} onValueChange={setCompression} max={100} step={1} />
                     <span>High</span>
                 </div>
               </div>
@@ -98,7 +132,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="year-1-compression">After 1 Year</Label>
-                        <Select defaultValue="1080p">
+                        <Select value={year1Compression} onValueChange={setYear1Compression}>
                             <SelectTrigger id="year-1-compression" className="w-[180px]">
                             <SelectValue placeholder="Select quality" />
                             </SelectTrigger>
@@ -112,7 +146,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                         <Label htmlFor="year-2-compression">After 2 Years</Label>
-                        <Select defaultValue="720p">
+                        <Select value={year2Compression} onValueChange={setYear2Compression}>
                             <SelectTrigger id="year-2-compression" className="w-[180px]">
                             <SelectValue placeholder="Select quality" />
                             </SelectTrigger>
@@ -126,7 +160,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                         <Label htmlFor="year-5-compression">After 5 Years</Label>
-                        <Select defaultValue="640p">
+                        <Select value={year5Compression} onValueChange={setYear5Compression}>
                             <SelectTrigger id="year-5-compression" className="w-[180px]">
                             <SelectValue placeholder="Select quality" />
                             </SelectTrigger>
@@ -140,7 +174,7 @@ export default function SettingsPage() {
                     </div>
                 </div>
                  <div className="flex items-center space-x-2 pt-2">
-                    <Switch id="exif-transfer" defaultChecked />
+                    <Switch id="exif-transfer" checked={preserveExif} onCheckedChange={setPreserveExif} />
                     <Label htmlFor="exif-transfer">Preserve EXIF Data</Label>
                 </div>
                  <p className="text-sm text-muted-foreground pt-1">
@@ -151,26 +185,26 @@ export default function SettingsPage() {
               <div className="border-t pt-6 space-y-4">
                 <h3 className="text-lg font-medium">iCloud Photos</h3>
                  <div className="flex items-center space-x-2">
-                    <Switch id="icloud-sync" />
+                    <Switch id="icloud-sync" checked={icloudSync} onCheckedChange={setIcloudSync} />
                     <Label htmlFor="icloud-sync">Enable iCloud Upload</Label>
                  </div>
                  <div className="space-y-2">
                     <Label htmlFor="icloudUser">iCloud Username</Label>
-                    <Input id="icloudUser" placeholder="apple@id.com" />
+                    <Input id="icloudUser" placeholder="apple@id.com" value={icloudUser} onChange={(e) => setIcloudUser(e.target.value)} disabled={!icloudSync} />
                  </div>
                  <div className="space-y-2">
                     <Label htmlFor="icloudPass">App-Specific Password</Label>
-                    <Input id="icloudPass" type="password" />
+                    <Input id="icloudPass" type="password" value={icloudPass} onChange={(e) => setIcloudPass(e.target.value)} disabled={!icloudSync} />
                  </div>
                  <div className="space-y-2">
                     <Label htmlFor="daily-limit">Daily Upload Limit</Label>
-                    <Input id="daily-limit" type="number" placeholder="e.g., 1000" defaultValue="1000" />
+                    <Input id="daily-limit" type="number" placeholder="e.g., 1000" value={dailyLimit} onChange={(e) => setDailyLimit(e.target.value)} disabled={!icloudSync} />
                     <p className="text-sm text-muted-foreground">
                       Set the maximum number of files to upload to iCloud each day.
                     </p>
                  </div>
                  <div className="flex items-center space-x-2">
-                    <Switch id="delete-yesterday" />
+                    <Switch id="delete-yesterday" checked={deleteYesterday} onCheckedChange={setDeleteYesterday} disabled={!icloudSync} />
                     <Label htmlFor="delete-yesterday">Delete Yesterday's Files Before Upload</Label>
                  </div>
                  <p className="text-sm text-muted-foreground pt-1">
@@ -179,7 +213,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save Storage Settings</Button>
+              <Button onClick={() => handleSave("Storage settings have been updated.")}>Save Storage Settings</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -196,11 +230,11 @@ export default function SettingsPage() {
                     <h3 className="text-lg font-medium">Change Password</h3>
                     <div className="space-y-2">
                         <Label htmlFor="current-password">Current Password</Label>
-                        <Input id="current-password" type="password" />
+                        <Input id="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" />
+                        <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                     </div>
                 </div>
                 <div className="border-t pt-6 space-y-4">
@@ -213,11 +247,11 @@ export default function SettingsPage() {
                             To change critical settings like storage paths or security options, you will be prompted to re-authenticate using 2FA.
                         </AlertDescription>
                      </Alert>
-                    <Button variant="outline">Trigger Re-authentication</Button>
+                    <Button variant="outline" onClick={() => toast({ title: "2FA Triggered", description: "A re-authentication request has been sent." })}>Trigger Re-authentication</Button>
                 </div>
             </CardContent>
             <CardFooter>
-              <Button>Save Security Settings</Button>
+              <Button onClick={() => handleSave("Security settings have been updated.")}>Save Security Settings</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -225,3 +259,5 @@ export default function SettingsPage() {
     </div>
   )
 }
+
+    
