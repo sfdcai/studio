@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -22,7 +21,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { KeyRound, Files, BarChart3, Settings as SettingsIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { type Settings, handleSaveSettings } from "./actions"
+import { type Settings, handleSaveAppSettings, handleSaveBackendSettings } from "./actions"
 import { Separator } from "@/components/ui/separator"
 
 type SettingsClientProps = {
@@ -49,21 +48,22 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
     }));
   };
 
-  const onSave = async () => {
-    const result = await handleSaveSettings(settings);
+  const onSaveBackend = async () => {
+    const result = await handleSaveBackendSettings(settings);
+    toast({
+      title: result.success ? "Backend Settings Saved" : "Error",
+      description: result.message,
+      variant: result.success ? "default" : "destructive",
+    })
+  }
 
-    if (result.success) {
-      toast({
-        title: "Settings Saved",
-        description: result.message,
-      })
-    } else {
-       toast({
-        title: "Error",
-        description: result.message,
-        variant: "destructive",
-      })
-    }
+  const onSaveApp = async () => {
+    const result = await handleSaveAppSettings(settings);
+     toast({
+      title: result.success ? "Settings Saved" : "Error",
+      description: result.message,
+      variant: result.success ? "default" : "destructive",
+    })
   }
 
   return (
@@ -92,7 +92,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={onSave}>Save General Settings</Button>
+            <Button onClick={onSaveApp}>Save General Settings</Button>
           </CardFooter>
         </Card>
       </TabsContent>
@@ -101,7 +101,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
           <CardHeader>
             <CardTitle>Storage & Backend Configuration</CardTitle>
             <CardDescription>
-              Manage paths, sync, and processing settings for the backend scripts.
+              Manage paths, sync, and processing settings for the backend scripts. These settings regenerate `config.conf`.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -207,7 +207,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
 
           </CardContent>
           <CardFooter>
-            <Button onClick={onSave}>Save Storage & Backend Settings</Button>
+            <Button onClick={onSaveBackend}>Save Storage & Backend Settings</Button>
           </CardFooter>
         </Card>
       </TabsContent>
@@ -262,7 +262,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={onSave}>Save AI Settings</Button>
+            <Button onClick={onSaveApp}>Save AI Settings</Button>
           </CardFooter>
         </Card>
       </TabsContent>
