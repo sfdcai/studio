@@ -17,7 +17,7 @@ apt-get install -y \
     bc
 
 echo "--- Installing iCloudPD via pip... ---"
-pip install icloudpd
+pip install --break-system-packages icloudpd
 
 echo "--- Setup Complete! ---"
 echo "Next steps:"

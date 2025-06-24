@@ -11,7 +11,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, Bot, Info, ShieldWarning, CircleAlert, Lightbulb } from "lucide-react";
+import { Sparkles, Bot, Info, ShieldAlert, CircleAlert, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -50,7 +50,7 @@ const getStatusVariant = (status?: 'Healthy' | 'Warning' | 'Error') => {
 const getSeverityIcon = (severity: 'Info' | 'Low' | 'Medium' | 'High') => {
     switch(severity) {
         case 'Info': return <Info className="h-5 w-5 text-blue-500" />;
-        case 'Low': return <ShieldWarning className="h-5 w-5 text-yellow-500" />;
+        case 'Low': return <ShieldAlert className="h-5 w-5 text-yellow-500" />;
         case 'Medium': return <CircleAlert className="h-5 w-5 text-orange-500" />;
         case 'High': return <CircleAlert className="h-5 w-5 text-red-500" />;
     }
