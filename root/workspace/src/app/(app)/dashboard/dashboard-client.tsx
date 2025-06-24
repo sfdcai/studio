@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { DollarSign, Folder, AlertTriangle, CopyCheck } from "lucide-react"
 import { JobControlCard } from '@/components/job-control-card'
 import { SystemStatusCard } from "@/components/system-status-card"
+import { ProcessingHistoryPoint } from "@/lib/data"
 
 type DashboardClientProps = {
     totalFiles: number;
@@ -12,7 +13,7 @@ type DashboardClientProps = {
     duplicatesFound: number;
     processingErrors: number;
     filesByCategoryData: { name: string; files: number }[];
-    processingHistoryData: { name: string; processed: number; failed: number }[];
+    processingHistoryData: ProcessingHistoryPoint[];
 }
 
 export function DashboardClient({
@@ -73,7 +74,7 @@ export function DashboardClient({
                         <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{processingErrors}</div>
+                        <div className="text-2xl font-bold">{processingErrors.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">check logs for details</p>
                     </CardContent>
                 </Card>
@@ -124,5 +125,3 @@ export function DashboardClient({
         </div>
     )
 }
-
-    
