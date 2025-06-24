@@ -1,37 +1,45 @@
 # =================================================
-#  Configuration for Media Processing Script
+#  Configuration for Media Processing Scripts
 # =================================================
+#
+# Instructions:
+# 1. Rename this file to 'config.conf'
+# 2. Fill in the values below to match your environment.
+#
 
 # --- Apple iCloud Credentials ---
-# Your Apple ID (email address)
+# Your Apple ID (email address). This is used by icloudpd.
 APPLE_ID="your_apple_id@email.com"
 
 # --- Directory Paths ---
-# IMPORTANT: The DB_PATH must match the location of the database file in your Next.js project.
-# By default, it's in the root of the project.
-BASE_DIR="/path/to/your/project/automated-media-server"
-STAGING_DIR="${BASE_DIR}/public/media"
-ARCHIVE_DIR="${BASE_DIR}/archive"
-PROCESSED_DIR="${BASE_DIR}/processed_for_upload"
-LOG_DIR="${BASE_DIR}/logs"
-DB_PATH="${BASE_DIR}/media_library.sqlite"
+# IMPORTANT: Use absolute paths to avoid issues when running from systemd.
+#
+# Directory where new media is downloaded from iCloud before processing.
+STAGING_DIR="/data/nas/staging"
+#
+# Directory where original, unprocessed files are moved after successful processing.
+ARCHIVE_DIR="/data/nas/archive"
+#
+# A temporary directory for compressed files before they are uploaded.
+# This directory will be cleaned out after successful uploads.
+PROCESSED_DIR="/data/processed/to_upload"
+#
+# Directory to store log files from the processing scripts.
+LOG_DIR="/data/nas/logs"
+#
+# Absolute path to the SQLite database file. This MUST match the path
+# the Next.js application uses. If you use the deploy_ui.sh script, this
+# path should be correct.
+DB_PATH="/root/mediaflow/media_library.sqlite"
 
 # --- Rclone Configuration ---
-# The name of your rclone remote for the optimized archive
+# The name of your rclone remote for the cloud archive (e.g., 'gdrive').
 RCLONE_REMOTE="gdrive"
-# The destination path within the remote
-RCLONE_DEST_PATH="My Optimized Media"
+#
+# The destination path within the rclone remote (e.g., 'My Media Archive').
+RCLONE_DEST_PATH="MediaFlowArchive"
 
 # --- Processing Limits ---
-# Set the maximum number of files to process in a single run.
+# Set the maximum number of files to process in a single run. This prevents
+# the script from running for too long if there's a large backlog.
 PROCESS_LIMIT="1000"
-
-# --- Image Compression Quality (JPEG) ---
-JPG_QUAL_MED="85"
-JPG_QUAL_LOW="75"
-
-# --- Video Compression Quality (CRF for H.265) ---
-VID_CRF_1080p="24"
-VID_CRF_720p="26"
-VID_CRF_360p="28"
-VID_CRF_270p="30"
