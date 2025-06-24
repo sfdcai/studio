@@ -42,14 +42,15 @@ export default function Nav() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+              >
+                <Link href={item.href}>
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
@@ -67,11 +68,11 @@ export default function Nav() {
               <span className="text-xs text-muted-foreground">user@mediaflow.com</span>
             </div>
           </div>
-          <Link href="/login" legacyBehavior passHref>
-             <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+             <Link href="/login">
                 <LogOut className="h-4 w-4"/>
-             </Button>
-          </Link>
+             </Link>
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>

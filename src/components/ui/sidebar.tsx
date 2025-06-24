@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "@radix-ui/react-slot"
 
 import { cn } from "@/lib/utils"
 
@@ -90,12 +91,15 @@ const sidebarMenuButtonVariants = cva(
 
 export interface SidebarMenuButtonProps
   extends React.AnchorHTMLAttributes<HTMLAnchorElement>,
-    VariantProps<typeof sidebarMenuButtonVariants> {}
+    VariantProps<typeof sidebarMenuButtonVariants> {
+  asChild?: boolean
+}
 
 const SidebarMenuButton = React.forwardRef<HTMLAnchorElement, SidebarMenuButtonProps>(
-  ({ className, isActive, size, ...props }, ref) => {
+  ({ className, isActive, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "a"
     return (
-      <a
+      <Comp
         ref={ref}
         className={cn(sidebarMenuButtonVariants({ isActive, size, className }))}
         {...props}
