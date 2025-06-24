@@ -50,8 +50,9 @@ safe_restart() {
   npm install
   echo "Building application for production..."
   npm run build
-  echo "Restarting PM2 process..."
-  pm2 restart "$PM2_APP_NAME" || echo "App not running, will start it in main script flow."
+  echo "Ensuring application is running with PM2..."
+  # This command will restart the app if it's running, or start it if it's not.
+  pm2 restart "$PM2_APP_NAME" --update-env || pm2 start npm --name "$PM2_APP_NAME" -- start
   echo -e "${GREEN}---> Safe restart finished.${NC}"
 }
 
@@ -156,7 +157,7 @@ npm install pm2 -g
 export PATH=$(npm prefix -g)/bin:$PATH
 # This will restart the app if it exists, or start it if it doesn't.
 # Note: `npm start` runs `next start` which serves the production build on port 3000.
-pm2 restart "$PM2_APP_NAME" || pm2 start npm --name "$PM2_APP_NAME" -- start
+pm2 restart "$PM2_APP_NAME" --update-env || pm2 start npm --name "$PM2_APP_NAME" -- start
 
 # 8. CONFIGURE PM2 TO START ON BOOT
 echo -e "\n${GREEN}---> 8. Configuring PM2 to start on system boot...${NC}"
