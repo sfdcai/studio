@@ -14,6 +14,7 @@ type DashboardClientProps = {
     processingErrors: number;
     filesByCategoryData: { name: string; files: number }[];
     processingHistoryData: ProcessingHistoryPoint[];
+    runManualSync: () => Promise<{ ok: boolean; message: string; output?: string; error?: string; }>;
 }
 
 export function DashboardClient({
@@ -23,6 +24,7 @@ export function DashboardClient({
     processingErrors,
     filesByCategoryData,
     processingHistoryData,
+    runManualSync
 }: DashboardClientProps) {
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -98,7 +100,7 @@ export function DashboardClient({
                     </CardContent>
                 </Card>
                 <div className="space-y-4">
-                  <JobControlCard />
+                  <JobControlCard runManualSync={runManualSync} />
                   <SystemStatusCard />
                 </div>
             </div>

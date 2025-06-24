@@ -1,5 +1,6 @@
 import { getMediaFiles, getStats, getProcessingHistory } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
+import { runManualSync } from './actions';
 
 export const revalidate = 0; // Disable caching
 
@@ -31,6 +32,7 @@ export default async function DashboardPage() {
               processingErrors={0}
               filesByCategoryData={[]}
               processingHistoryData={[]}
+              runManualSync={runManualSync}
           />
       );
   }
@@ -58,6 +60,7 @@ export default async function DashboardPage() {
         processingErrors={processingErrors}
         filesByCategoryData={filesByCategoryData}
         processingHistoryData={processingHistoryData}
+        runManualSync={runManualSync}
     />
   )
 }

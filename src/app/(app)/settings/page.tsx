@@ -1,4 +1,4 @@
-import { getSettings } from "@/app/(app)/settings/actions";
+import { getSettings, handleSaveAppSettings, handleSaveBackendSettings } from "@/app/(app)/settings/actions";
 import { SettingsClient } from "./settings-client";
 
 export default async function SettingsPage() {
@@ -9,7 +9,11 @@ export default async function SettingsPage() {
       <div className="flex items-center justify-between space-y-2 mb-4">
         <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
       </div>
-      <SettingsClient initialSettings={settings} />
+      <SettingsClient 
+        initialSettings={settings}
+        handleSaveAppSettings={handleSaveAppSettings}
+        handleSaveBackendSettings={handleSaveBackendSettings}
+      />
     </div>
   )
 }

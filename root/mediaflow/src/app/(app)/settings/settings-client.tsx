@@ -22,14 +22,15 @@ import { Switch } from "@/components/ui/switch"
 import { KeyRound, Files, BarChart3, Settings as SettingsIcon, UploadCloud, Zap } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Settings } from "@/lib/types"
-import { handleSaveAppSettings, handleSaveBackendSettings } from "./actions"
 import { Separator } from "@/components/ui/separator"
 
 type SettingsClientProps = {
-  initialSettings: Settings
+  initialSettings: Settings;
+  handleSaveAppSettings: (newSettings: Partial<Settings>) => Promise<{ success: boolean; message?: string }>;
+  handleSaveBackendSettings: (newSettings: Partial<Settings>) => Promise<{ success: boolean; message?: string }>;
 }
 
-export function SettingsClient({ initialSettings }: SettingsClientProps) {
+export function SettingsClient({ initialSettings, handleSaveAppSettings, handleSaveBackendSettings }: SettingsClientProps) {
   const { toast } = useToast()
 
   const [settings, setSettings] = React.useState(initialSettings)

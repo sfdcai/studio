@@ -1,5 +1,6 @@
 import { getMediaFiles, getStats, getProcessingHistory } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
+import { runManualSync } from './actions';
 
 export const revalidate = 0; // Disable caching
 
@@ -12,9 +13,29 @@ const formatBytes = (mb: number) => {
 };
 
 export default async function DashboardPage() {
-  const data = await getMediaFiles();
-  const stats = await getStats();
-  const processingHistoryData = await getProcessingHistory();
+  let data = [];
+  let stats: any = {};
+  let processingHistoryData = [];
+  try {
+      data = await getMediaFiles();
+      stats = await getStats();
+      processingHistoryData = await getProcessingHistory();
+  } catch (error) {
+      console.error("Failed to load dashboard data:", error);
+      // Render the client with empty/default data on error
+      // This prevents the page from crashing if the DB is not ready
+      return (
+          <DashboardClient
+              totalFiles={0}
+              storageSaved={formatBytes(0)}
+              duplicatesFound={0}
+              processingErrors={0}
+              filesByCategoryData={[]}
+              processingHistoryData={[]}
+              runManualSync={runManualSync}
+          />
+      );
+  }
 
   // Use the stats table as the source of truth, with fallbacks.
   const totalFiles = stats.total_files || data.length;
@@ -39,6 +60,7 @@ export default async function DashboardPage() {
         processingErrors={processingErrors}
         filesByCategoryData={filesByCategoryData}
         processingHistoryData={processingHistoryData}
+        runManualSync={runManualSync}
     />
   )
 }
