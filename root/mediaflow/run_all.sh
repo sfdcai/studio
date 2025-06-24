@@ -19,13 +19,17 @@ echo "--- Starting iCloud Download Run ---"
 echo "Username: $APPLE_ID"
 echo "Download Directory: $STAGING_DIR"
 
-# Run the iCloud download. It will use the stored session cookie.
-# --until-found 25 tells it to stop after finding 25 consecutive already-downloaded photos.
-# This makes subsequent runs very fast.
-icloudpd --directory "$STAGING_DIR" \
-         --username "$APPLE_ID" \
-         --folder-structure "$ICLOUD_FOLDER_STRUCTURE" \
-         --until-found 25
+# Build the icloudpd command
+# Start with the base command
+icloudpd_cmd="icloudpd --directory \"$STAGING_DIR\" --username \"$APPLE_ID\" --until-found 25"
+
+# Only add the --folder-structure argument if the variable is not empty
+if [ -n "$ICLOUD_FOLDER_STRUCTURE" ]; then
+    icloudpd_cmd="$icloudpd_cmd --folder-structure \"$ICLOUD_FOLDER_STRUCTURE\""
+fi
+
+# Execute the command
+eval $icloudpd_cmd
 
 # Check if the download was successful (exit code 0)
 if [ $? -eq 0 ]; then
