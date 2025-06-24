@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Folder, Sparkles, FileText, Settings, LogOut, Film } from "lucide-react"
+import { LayoutDashboard, Folder, Sparkles, FileText, Settings, Film } from "lucide-react"
 
 import {
   Sidebar,
@@ -11,11 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
-  SidebarSeparator
 } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -55,26 +51,6 @@ export default function Nav() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarSeparator />
-      <SidebarFooter className="p-2">
-        <div className="flex items-center justify-between p-2 rounded-md hover:bg-sidebar-accent">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src="https://placehold.co/40x40.png" alt="@user" data-ai-hint="user avatar" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="font-medium text-sm">User</span>
-              <span className="text-xs text-muted-foreground">user@mediaflow.com</span>
-            </div>
-          </div>
-          <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-             <Link href="/login">
-                <LogOut className="h-4 w-4"/>
-             </Link>
-          </Button>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   )
 }
