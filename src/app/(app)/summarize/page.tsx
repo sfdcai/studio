@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { handleSummarize, State } from "./actions";
+import { handleAnalysis, State } from "./actions";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -13,9 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, UploadCloud, CheckCircle, AlertCircle } from "lucide-react";
+import { Sparkles, UploadCloud, CheckCircle, Camera, Lightbulb, BarChart, Settings, Tags, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -28,27 +27,27 @@ function SubmitButton() {
             {pending ? (
                 <>
                     <Sparkles className="mr-2 h-4 w-4 animate-spin" />
-                    Summarizing...
+                    Analyzing...
                 </>
             ) : (
                 <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Summary
+                    Generate Analysis
                 </>
             )}
         </Button>
     );
 }
 
-export default function SummarizePage() {
+export default function AnalyzePage() {
     const initialState: State = { message: "", errors: {} };
-    const [state, dispatch] = useFormState(handleSummarize, initialState);
+    const [state, dispatch] = useFormState(handleAnalysis, initialState);
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
 
     useEffect(() => {
         if (state.message) {
-            if (state.summary) { // Success
+            if (state.analysis) { // Success
                 toast({
                     title: "Success",
                     description: state.message,
@@ -64,14 +63,16 @@ export default function SummarizePage() {
             }
         }
     }, [state, toast]);
+    
+    const analysis = state.analysis;
 
     return (
         <div className="p-4 md:p-8 grid gap-8 md:grid-cols-2">
             <Card className="self-start">
                 <CardHeader>
-                    <CardTitle>AI Media Summarization</CardTitle>
+                    <CardTitle>AI Media Analysis</CardTitle>
                     <CardDescription>
-                        Upload a media file and provide a brief description to generate an AI-powered summary and categories.
+                        Upload a media file to generate an AI-powered technical analysis, summary, and suggestions.
                     </CardDescription>
                 </CardHeader>
                 <form ref={formRef} action={dispatch}>
@@ -100,19 +101,6 @@ export default function SummarizePage() {
                                 </p>
                             )}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                placeholder="e.g., A photo of a sunset over the mountains."
-                            />
-                            {state.errors?.description && (
-                                <p className="text-sm font-medium text-destructive">
-                                    {state.errors.description[0]}
-                                </p>
-                            )}
-                        </div>
                     </CardContent>
                     <CardFooter>
                         <SubmitButton />
@@ -121,39 +109,56 @@ export default function SummarizePage() {
             </Card>
 
             <div className="space-y-8">
-                {state.summary && (
-                    <Alert className="border-green-500 text-green-700 dark:border-green-400 dark:text-green-400">
-                        <CheckCircle className="h-4 w-4 !text-green-500" />
-                        <AlertTitle>Summarization Complete</AlertTitle>
-                        <AlertDescription>
-                            Here's the AI-generated result:
-                        </AlertDescription>
-                    </Alert>
-                )}
-                 {state.summary && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">{state.summary}</p>
-                        </CardContent>
-                    </Card>
-                )}
-                {state.categories && state.categories.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Suggested Categories</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {state.categories.map((cat, i) => <Badge key={i} variant="secondary">{cat}</Badge>)}
-                        </CardContent>
-                    </Card>
-                )}
-                 {!state.summary && !state.message && (
+                {analysis ? (
+                    <>
+                        <Alert className="border-green-500 text-green-700 dark:border-green-400 dark:text-green-400">
+                            <CheckCircle className="h-4 w-4 !text-green-500" />
+                            <AlertTitle>Analysis Complete</AlertTitle>
+                            <AlertDescription>
+                                Here's the AI-generated result:
+                            </AlertDescription>
+                        </Alert>
+                        <Card>
+                            <CardHeader><CardTitle className="flex items-center gap-2"><FileText /> Summary</CardTitle></CardHeader>
+                            <CardContent><p className="text-muted-foreground">{analysis.summary}</p></CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader><CardTitle className="flex items-center gap-2"><Tags/> Suggested Categories</CardTitle></CardHeader>
+                            <CardContent className="flex flex-wrap gap-2">
+                                {analysis.categories.map((cat, i) => <Badge key={i} variant="secondary">{cat}</Badge>)}
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader><CardTitle className="flex items-center gap-2"><BarChart/> Technical Analysis</CardTitle></CardHeader>
+                            <CardContent className="space-y-3 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Camera/> Inferred Camera:</span>
+                                    <strong>{analysis.technicalAnalysis.inferredCamera}</strong>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Lightbulb/> Lighting:</span>
+                                    <strong>{analysis.technicalAnalysis.lightingAnalysis}</strong>
+                                </div>
+                                <div>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Lightbulb/> Composition Tips:</span>
+                                    <p className="mt-1 pl-2 text-foreground">{analysis.technicalAnalysis.compositionTips}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader><CardTitle className="flex items-center gap-2"><Settings/> Suggestions</CardTitle></CardHeader>
+                            <CardContent className="space-y-3 text-sm">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-muted-foreground flex items-center gap-2">Initial Compression:</span>
+                                    <Badge variant="default">{analysis.suggestions.initialCompression}</Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </>
+                ) : (
                      <div className="flex flex-col items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
                         <Sparkles className="w-16 h-16 mb-4 text-muted-foreground"/>
-                        <p className="text-center text-muted-foreground">Your AI-generated summary will appear here.</p>
+                        <p className="text-center text-muted-foreground">Your AI-generated analysis will appear here.</p>
                     </div>
                 )}
             </div>

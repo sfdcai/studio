@@ -1,10 +1,9 @@
 "use server";
 
-import { summarizeMedia } from "@/ai/flows/media-summarization";
+import { analyzeMedia, AnalyzeMediaOutput } from "@/ai/flows/media-summarization";
 import { z } from "zod";
 
 const FormSchema = z.object({
-    description: z.string().min(1, "Description is required."),
     mediaFile: z
         .instanceof(File)
         .refine((file) => file.size > 0, "Media file is required.")
@@ -16,10 +15,8 @@ const FormSchema = z.object({
 
 export type State = {
     message?: string;
-    summary?: string;
-    categories?: string[];
+    analysis?: AnalyzeMediaOutput;
     errors?: {
-        description?: string[];
         mediaFile?: string[];
     };
 };
@@ -31,12 +28,11 @@ async function fileToDataUri(file: File): Promise<string> {
     return `data:${file.type};base64,${buffer.toString("base64")}`;
 }
 
-export async function handleSummarize(
+export async function handleAnalysis(
     prevState: State,
     formData: FormData
 ): Promise<State> {
     const validatedFields = FormSchema.safeParse({
-        description: formData.get("description"),
         mediaFile: formData.get("mediaFile"),
     });
 
@@ -48,21 +44,20 @@ export async function handleSummarize(
     }
 
     try {
-        const { description, mediaFile } = validatedFields.data;
+        const { mediaFile } = validatedFields.data;
         const mediaDataUri = await fileToDataUri(mediaFile);
 
-        const result = await summarizeMedia({
-            description,
+        const result = await analyzeMedia({
+            fileName: mediaFile.name,
             mediaDataUri,
         });
 
         return {
-            message: "Summarization successful!",
-            summary: result.summary,
-            categories: result.categories,
+            message: "Analysis successful!",
+            analysis: result,
         };
     } catch (error) {
-        console.error("Summarization error:", error);
+        console.error("Analysis error:", error);
         return {
             message:
                 error instanceof Error ? error.message : "An unknown error occurred.",
