@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -44,31 +45,8 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { data, MediaFile } from "@/lib/data"
 
-
-const data: MediaFile[] = [
-    { id: "m5gr84i9", originalSize: 420, compressedSize: 316, status: "success", camera: "Sony A7III", date: "2023-10-25", lastCompressed: "2023-10-25T10:00:00Z", nextCompression: "2024-10-25" },
-    { id: "3u1reuv4", originalSize: 350, compressedSize: 242, status: "success", camera: "Canon R5", date: "2023-10-25", lastCompressed: "2023-10-25T11:00:00Z", nextCompression: "2024-10-25" },
-    { id: "derv1ws0", originalSize: 950, compressedSize: 837, status: "processing", camera: "Nikon Z6", date: "2023-10-26", lastCompressed: "2023-10-26T12:00:00Z", nextCompression: "2024-10-26" },
-    { id: "5kma53ae", originalSize: 1000, compressedSize: 874, status: "success", camera: "Sony A7III", date: "2023-10-27", lastCompressed: "2023-10-27T13:00:00Z", nextCompression: "2024-10-27" },
-    { id: "bhqecj4p", originalSize: 800, compressedSize: 721, status: "failed", camera: "iPhone 14 Pro", date: "2023-10-28", lastCompressed: "N/A", nextCompression: "N/A" },
-    { id: "m5gr84i9-2", originalSize: 420, compressedSize: 316, status: "success", camera: "Sony A7III", date: "2023-10-25", lastCompressed: "2023-10-25T14:00:00Z", nextCompression: "2024-10-25" },
-    { id: "3u1reuv4-2", originalSize: 350, compressedSize: 242, status: "success", camera: "Canon R5", date: "2023-10-25", lastCompressed: "2023-10-25T15:00:00Z", nextCompression: "2024-10-25" },
-    { id: "derv1ws0-2", originalSize: 950, compressedSize: 837, status: "processing", camera: "Nikon Z6", date: "2023-10-26", lastCompressed: "2023-10-26T16:00:00Z", nextCompression: "2024-10-26" },
-    { id: "5kma53ae-2", originalSize: 1000, compressedSize: 874, status: "success", camera: "iPhone 14 Pro", date: "2023-10-27", lastCompressed: "2023-10-27T17:00:00Z", nextCompression: "2024-10-27" },
-    { id: "bhqecj4p-2", originalSize: 800, compressedSize: 721, status: "failed", camera: "iPhone 14 Pro", date: "2023-10-28", lastCompressed: "N/A", nextCompression: "N/A" },
-]
-
-export type MediaFile = {
-  id: string
-  originalSize: number
-  compressedSize: number
-  status: "pending" | "processing" | "success" | "failed"
-  camera: string,
-  date: string
-  lastCompressed: string
-  nextCompression: string
-}
 
 export const columns: ColumnDef<MediaFile>[] = [
   {
@@ -99,19 +77,19 @@ export const columns: ColumnDef<MediaFile>[] = [
     cell: ({ row }) => <div className="capitalize font-mono text-xs">{row.getValue("id")}.jpg</div>,
   },
   {
-    accessorKey: "date",
+    accessorKey: "createdDate",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Date
+          Created Date
           <ChevronsUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue("date")}</div>,
+    cell: ({ row }) => <div>{row.getValue("createdDate")}</div>,
   },
   {
     accessorKey: "status",
@@ -179,7 +157,9 @@ export const columns: ColumnDef<MediaFile>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>View details</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/files/${row.original.id}`}>View details</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>Download file</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">Delete file</DropdownMenuItem>
@@ -196,10 +176,7 @@ export default function FileExplorerPage() {
     []
   )
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({
-      lastCompressed: false,
-      nextCompression: false,
-    })
+    React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [date, setDate] = React.useState<Date>()
 
@@ -224,9 +201,9 @@ export default function FileExplorerPage() {
   
   React.useEffect(() => {
     if (date) {
-      table.getColumn("date")?.setFilterValue(format(date, "yyyy-MM-dd"));
+      table.getColumn("createdDate")?.setFilterValue(format(date, "yyyy-MM-dd"));
     } else {
-      table.getColumn("date")?.setFilterValue("");
+      table.getColumn("createdDate")?.setFilterValue("");
     }
   }, [date, table]);
 
