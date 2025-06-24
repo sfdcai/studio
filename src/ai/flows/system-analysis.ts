@@ -66,7 +66,7 @@ const prompt = ai.definePrompt({
 
   {{#if settings}}
   ## System Configuration
-  Do NOT include the API key in your analysis.
+  Do NOT include the API key or user credentials in your analysis.
   \`\`\`json
   {{{json settings}}}
   \`\`\`
@@ -89,7 +89,8 @@ const analyzeSystemFlow = ai.defineFlow(
   async (input) => {
     // Sanitize settings to remove sensitive data before sending to the prompt
     if (input.settings) {
-      input.settings.googleAiApiKey = undefined;
+      input.settings.googleAiApiKey = "[REDACTED]";
+      input.settings.icloudUser = "[REDACTED]";
     }
 
     // Limit the number of files sent to the prompt to avoid excessive token usage

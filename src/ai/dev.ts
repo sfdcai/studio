@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/media-summarization.ts';
+import '@/ai/flows/system-analysis.ts';

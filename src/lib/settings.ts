@@ -24,6 +24,11 @@ export type Settings = {
   vidCRF1080p: number;
   vidCRF720p: number;
   vidCRF640p: number;
+  // AI Settings
+  googleAiApiKey: string;
+  aiAllowMetadata: boolean;
+  aiAllowStats: boolean;
+  aiAllowSettings: boolean;
 };
 
 const settingsFilePath = path.join(process.cwd(), 'settings.json');
@@ -36,7 +41,7 @@ const defaultSettings: Settings = {
   archiveDir: "/data/nas/archive",
   processedDir: "/data/nas/processed",
   logDir: "/data/nas/logs",
-  dbPath: "media_library.sqlite",
+  dbPath: path.join(process.cwd(), 'media_library.sqlite'),
   rcloneRemote: "gdrive",
   drivePath: "My Media/Optimized",
   icloudUser: "your_apple_id@email.com",
@@ -46,6 +51,10 @@ const defaultSettings: Settings = {
   vidCRF1080p: 24,
   vidCRF720p: 26,
   vidCRF640p: 28,
+  googleAiApiKey: "",
+  aiAllowMetadata: false,
+  aiAllowStats: false,
+  aiAllowSettings: false,
 };
 
 async function ensureSettingsFileExists() {

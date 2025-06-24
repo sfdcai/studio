@@ -1,56 +1,47 @@
 "use server";
 
-import { analyzeMedia, AnalyzeMediaOutput } from "@/ai/flows/media-summarization";
-import { z } from "zod";
-
-const FormSchema = z.object({
-    mediaFile: z
-        .instanceof(File)
-        .refine((file) => file.size > 0, "Media file is required.")
-        .refine(
-            (file) => file.size < 10 * 1024 * 1024,
-            "File size must be less than 10MB."
-        ),
-});
+import { analyzeSystem, SystemAnalysisOutput } from "@/ai/flows/system-analysis";
+import { getSettings } from "@/lib/settings";
+import { getMediaFiles, getStats } from "@/lib/data";
 
 export type State = {
     message?: string;
-    analysis?: AnalyzeMediaOutput;
-    errors?: {
-        mediaFile?: string[];
-    };
+    analysis?: SystemAnalysisOutput;
+    error?: string;
 };
-
-// Helper to convert file to base64 data URI
-async function fileToDataUri(file: File): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return `data:${file.type};base64,${buffer.toString("base64")}`;
-}
 
 export async function handleAnalysis(
     prevState: State,
     formData: FormData
 ): Promise<State> {
-    const validatedFields = FormSchema.safeParse({
-        mediaFile: formData.get("mediaFile"),
-    });
+    const settings = await getSettings();
 
-    if (!validatedFields.success) {
+    if (!settings.googleAiApiKey) {
         return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: "Validation failed. Please check your inputs.",
-        };
+            error: "Google AI API Key is not configured. Please set it in the AI tab under Settings."
+        }
     }
 
     try {
-        const { mediaFile } = validatedFields.data;
-        const mediaDataUri = await fileToDataUri(mediaFile);
+        const input: any = {};
 
-        const result = await analyzeMedia({
-            fileName: mediaFile.name,
-            mediaDataUri,
-        });
+        if (settings.aiAllowMetadata) {
+            input.files = await getMediaFiles();
+        }
+        if (settings.aiAllowStats) {
+            input.stats = await getStats();
+        }
+        if (settings.aiAllowSettings) {
+            input.settings = settings;
+        }
+
+        if (Object.keys(input).length === 0) {
+            return {
+                error: "No data permissions enabled. Please allow the AI to access data in the AI tab under Settings."
+            }
+        }
+
+        const result = await analyzeSystem(input);
 
         return {
             message: "Analysis successful!",
@@ -59,8 +50,8 @@ export async function handleAnalysis(
     } catch (error) {
         console.error("Analysis error:", error);
         return {
-            message:
-                error instanceof Error ? error.message : "An unknown error occurred.",
+            error:
+                error instanceof Error ? error.message : "An unknown error occurred during analysis.",
         };
     }
 }
