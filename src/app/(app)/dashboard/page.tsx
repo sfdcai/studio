@@ -1,17 +1,7 @@
-import { getMediaFiles, getStats } from '@/lib/data';
+import { getMediaFiles, getStats, getProcessingHistory } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
 
 export const revalidate = 0; // Disable caching
-
-const processingHistoryData = [
-  { name: 'Mon', processed: 20, failed: 1 },
-  { name: 'Tue', processed: 35, failed: 2 },
-  { name: 'Wed', processed: 45, failed: 0 },
-  { name: 'Thu', processed: 30, failed: 5 },
-  { name: 'Fri', processed: 50, failed: 1 },
-  { name: 'Sat', processed: 60, failed: 3 },
-  { name: 'Sun', processed: 55, failed: 2 },
-];
 
 const formatBytes = (mb: number) => {
     if (mb < 1024) return `${mb.toFixed(1)} MB`;
@@ -24,15 +14,12 @@ const formatBytes = (mb: number) => {
 export default async function DashboardPage() {
   const data = await getMediaFiles();
   const stats = await getStats();
+  const processingHistoryData = await getProcessingHistory();
 
-  const totalFiles = data.length;
-  const storageSaved = data.reduce((sum, file) => {
-    if (file.status === 'success' || file.status === 'processing') {
-      return sum + (file.originalSize - file.compressedSize);
-    }
-    return sum;
-  }, 0);
-  const processingErrors = data.filter(file => file.status === 'failed').length;
+  // Use the stats table as the source of truth, with fallbacks.
+  const totalFiles = stats.total_files || data.length;
+  const storageSaved = stats.storage_saved_mb || 0;
+  const processingErrors = stats.processing_errors || 0;
   const duplicatesFound = stats.duplicates_found || 0;
 
   const filesByCategory = data.reduce((acc, file) => {
@@ -43,7 +30,6 @@ export default async function DashboardPage() {
   }, {} as Record<string, number>);
 
   const filesByCategoryData = Object.entries(filesByCategory).map(([name, files]) => ({ name, files }));
-
 
   return (
     <DashboardClient

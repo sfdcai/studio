@@ -44,7 +44,9 @@ async function initDb(db: Database) {
       nas_backup_status INTEGER DEFAULT 0,
       gphotos_backup_status INTEGER DEFAULT 0,
       icloud_upload_status INTEGER DEFAULT 0,
-      staging_path TEXT
+      staging_path TEXT,
+      archive_path TEXT,
+      processed_path TEXT
     );
   `);
 
@@ -54,9 +56,25 @@ async function initDb(db: Database) {
       value INTEGER NOT NULL DEFAULT 0
     );
   `);
+  
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        file_id INTEGER,
+        timestamp TEXT NOT NULL,
+        level TEXT NOT NULL,
+        message TEXT NOT NULL,
+        FOREIGN KEY(file_id) REFERENCES files(id) ON DELETE CASCADE
+    );
+  `);
 
   // Initialize stats if they don't exist
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('duplicates_found', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('storage_saved_mb', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('processing_errors', 0)");
+  
+  // This stat is not set by the script but is useful for dashboard queries.
+  // We'll update it periodically or via a trigger if needed.
+  const fileCount = await db.get('SELECT COUNT(*) as count FROM files');
+  await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('total_files', ?)", fileCount.count);
 }

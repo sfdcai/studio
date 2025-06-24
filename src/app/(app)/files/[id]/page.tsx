@@ -1,4 +1,4 @@
-import { getMediaFile, MediaFile } from "@/lib/data";
+import { getMediaFile, getLogsForFile, MediaFile, LogEntry } from "@/lib/data";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,64 +49,13 @@ const LogLevelBadge = ({ level }: { level: string }) => {
     return <Badge variant={variant as any} className="w-16 justify-center">{level}</Badge>
 }
 
-const generateLogsForFile = (file: MediaFile) => {
-    const logs: { level: string, message: string, timestamp: string }[] = [];
-    const baseTimestamp = new Date(file.createdDate);
-
-    const addLog = (level: string, message: string, offsetSeconds: number) => {
-        const timestamp = new Date(baseTimestamp.getTime() + offsetSeconds * 1000).toISOString();
-        logs.push({ level, message, timestamp });
-    };
-
-    addLog("INFO", `Found new file: ${file.fileName}`, 1);
-    addLog("INFO", `Starting processing for ${file.fileName}.`, 2);
-
-    switch(file.status) {
-        case 'success':
-            addLog("INFO", `Compression successful for ${file.fileName}. Saved ${(file.originalSize - file.compressedSize).toFixed(2)} MB.`, 5);
-            if (file.googlePhotosBackup) {
-                addLog("INFO", `Uploading to Google Photos for ${file.fileName}.`, 6);
-                addLog("INFO", `Upload to Google Photos successful for ${file.fileName}.`, 10);
-            }
-            if (file.icloudUpload) {
-                addLog("INFO", `Uploading to iCloud for ${file.fileName}.`, 11);
-                addLog("INFO", `Upload to iCloud successful for ${file.fileName}.`, 15);
-            } else {
-                addLog("WARN", `iCloud sync disabled. Skipping iCloud upload for ${file.fileName}.`, 11);
-            }
-            addLog("INFO", `Processing complete for ${file.fileName}.`, 16);
-            break;
-        case 'failed':
-             addLog("ERROR", `Compression failed for ${file.fileName}: Processing error.`, 5);
-             addLog("INFO", `Moving ${file.fileName} to error directory.`, 6);
-            break;
-        case 'processing':
-            addLog("INFO", `Compression in progress for ${file.fileName}...`, 5);
-            break;
-        case 'pending':
-            addLog("INFO", `File ${file.fileName} is queued for processing.`, 3);
-            break;
-    }
-    return logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+const generateProcessingHistoryFromLogs = (logs: LogEntry[]) => {
+    return logs.map(log => ({
+        status: log.message,
+        timestamp: new Date(log.timestamp).toLocaleString()
+    }));
 }
 
-const generateProcessingHistory = (file: MediaFile) => {
-    const history = [ { status: 'Queued', timestamp: new Date(file.createdDate).toLocaleString() } ];
-    if (file.status === 'processing' || file.status === 'success' || file.status === 'failed') {
-        history.push({ status: 'Processing Started', timestamp: new Date(new Date(file.createdDate).getTime() + 2000).toLocaleString() });
-    }
-    if (file.status === 'success') {
-        history.push({ status: 'Compression Successful', timestamp: file.lastCompressed === 'N/A' ? 'N/A' : new Date(file.lastCompressed).toLocaleString() });
-        if (file.nasBackup) history.push({ status: 'Backed up to NAS', timestamp: new Date(new Date(file.lastCompressed).getTime() + 2000).toLocaleString() });
-        if (file.googlePhotosBackup) history.push({ status: 'Synced to Google Photos', timestamp: new Date(new Date(file.lastCompressed).getTime() + 3000).toLocaleString() });
-        if (file.icloudUpload) history.push({ status: 'Uploaded to iCloud', timestamp: new Date(new Date(file.lastCompressed).getTime() + 4000).toLocaleString() });
-        history.push({ status: 'Complete', timestamp: new Date(new Date(file.lastCompressed).getTime() + 5000).toLocaleString() });
-    }
-    if (file.status === 'failed') {
-        history.push({ status: 'Error: Compression Failed', timestamp: new Date(new Date(file.createdDate).getTime() + 5000).toLocaleString() });
-    }
-    return history;
-}
 
 export default async function FileDetailsPage({ params }: { params: { id: string } }) {
   const file = await getMediaFile(params.id);
@@ -114,6 +63,9 @@ export default async function FileDetailsPage({ params }: { params: { id: string
   if (!file) {
       notFound();
   }
+  
+  const logs = await getLogsForFile(params.id);
+  const history = generateProcessingHistoryFromLogs(logs);
 
   const statusVariant = {
     "success": "default",
@@ -121,11 +73,10 @@ export default async function FileDetailsPage({ params }: { params: { id: string
     "failed": "destructive"
   }[file.status] ?? "outline";
 
-  const savings = file.originalSize > 0 && file.status === 'success' ? Math.round(((file.originalSize - file.compressedSize) / file.originalSize) * 100) : 0;
+  const savings = file.originalSize > 0 && file.status === 'success' && file.compressedSize > 0
+    ? Math.round(((file.originalSize - file.compressedSize) / file.originalSize) * 100) 
+    : 0;
   
-  const logs = generateLogsForFile(file);
-  const history = generateProcessingHistory(file);
-
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center gap-4 mb-6">
@@ -146,7 +97,7 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                     className="aspect-video w-full object-cover"
                     data-ai-hint="product image"
                     height={600}
-                    src={`/media/${encodeURIComponent(file.fileName)}`}
+                    src={`/api/media/${encodeURIComponent(file.fileName)}`}
                     width={800}
                 />
                 </CardContent>
@@ -156,7 +107,7 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" /> Processing History</CardTitle>
                     <CardDescription>
-                        A timeline of the processing steps for this file.
+                        A timeline of the processing steps for this file from the database logs.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -26,7 +26,7 @@ error_handler() {
 trap 'error_handler $LINENO' ERR
 
 # --- Script Configuration ---
-REPO_URL="git@github.com:your_username/your_repo.git" # <-- UPDATE THIS!
+REPO_URL="git@github.com:sfdcai/studio.git" # <-- This is your repository
 APP_DIR="/root/mediaflow"
 PM2_APP_NAME="mediaflow-app"
 SSH_CONFIRM_FILE="$HOME/.ssh/github_key_verified"
@@ -41,8 +41,9 @@ NC='\033[0m' # No Color
 safe_restart() {
   echo -e "\n${BLUE}---> Performing a safe restart of the application...${NC}"
   cd "$APP_DIR"
-  echo "Forcefully discarding any local changes..."
+  echo "Forcefully discarding any local changes and removing untracked files..."
   git reset --hard HEAD
+  git clean -fd
   echo "Pulling latest code from GitHub..."
   git pull
   echo "Installing dependencies..."
@@ -133,6 +134,7 @@ if [ -d "$APP_DIR/.git" ]; then
     echo "Repository already exists. Discarding local changes and pulling..."
     cd "$APP_DIR"
     git reset --hard HEAD
+    git clean -fd
     git pull
 else
     echo "Cloning new repository..."

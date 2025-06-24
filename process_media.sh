@@ -26,12 +26,26 @@ else
     exit 1
 fi
 
-# --- Log Function ---
-log() {
-    echo "$(date +'%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_DIR/processing_$(date +%Y-%m-%d).log"
+# --- DB Log Function ---
+db_log() {
+    # Usage: db_log "INFO" "This is a message" $file_id
+    local level="$1"
+    local message="$2"
+    local file_id_arg="$3" # This can be null for system-wide logs
+    local timestamp
+    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S")
+
+    # Escape single quotes in the message to prevent SQL errors
+    local safe_message="${message//\'/\'\'}"
+
+    if [ -n "$file_id_arg" ]; then
+        sqlite3 "$DB_PATH" "INSERT INTO logs (file_id, timestamp, level, message) VALUES ($file_id_arg, '$timestamp', '$level', '$safe_message');"
+    else
+        sqlite3 "$DB_PATH" "INSERT INTO logs (timestamp, level, message) VALUES ('$timestamp', '$level', '$safe_message');"
+    fi
 }
 
-log "--- Starting media processing run with limit: $PROCESS_LIMIT ---"
+db_log "INFO" "--- Starting media processing run with limit: $PROCESS_LIMIT ---"
 processed_count=0
 
 # Ensure directories exist
@@ -42,9 +56,9 @@ mkdir -p "$(dirname "$DB_PATH")"
 
 # --- Main Processing Loop ---
 # Find all media files in the staging directory, limit the number processed per run.
-find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.heic" -o -iname "*.mp4" -o -iname "*.mov" \) -print0 | head -z -n "$PROCESS_LIMIT" | while IFS= read -r -d $'\0' file_path; do
+find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.heic" -o -iname "*.mov" -o -iname "*.mp4" \) -print0 | head -z -n "$PROCESS_LIMIT" | while IFS= read -r -d $'\0' file_path; do
 
-    log "--- Processing file: $file_path ---"
+    db_log "INFO" "--- Found file: $file_path ---"
     
     # 1. Deduplication Check
     file_hash=$(sha1sum "$file_path" | awk '{print $1}')
@@ -52,7 +66,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
 
     existing_id=$(sqlite3 "$DB_PATH" "SELECT id FROM files WHERE file_hash = '$file_hash';")
     if [ -n "$existing_id" ]; then
-        log "DUPLICATE: Hash $file_hash for file $file_name already exists. Deleting new file."
+        db_log "WARN" "DUPLICATE: Hash $file_hash for file $file_name already exists. Deleting new file."
         sqlite3 "$DB_PATH" "UPDATE stats SET value = value + 1 WHERE key = 'duplicates_found';"
         rm "$file_path"
         continue
@@ -70,12 +84,13 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
         file_type="Video"
     fi
 
-    log "NEW FILE: Inserting $file_name into database as pending."
+    db_log "INFO" "NEW FILE: Inserting $file_name into database as pending."
     sqlite3 "$DB_PATH" "INSERT INTO files (file_hash, file_name, file_type, original_size_mb, status, camera, created_date, staging_path) VALUES ('$file_hash', '$file_name', '$file_type', $original_size_mb, 'pending', '$camera_model', '$created_iso', '$file_path');"
     file_id=$(sqlite3 "$DB_PATH" "SELECT last_insert_rowid();")
     
     # 3. Mark as processing
     sqlite3 "$DB_PATH" "UPDATE files SET status = 'processing' WHERE id = $file_id;"
+    db_log "INFO" "Starting processing." "$file_id"
     
     # 4. Tiered Compression Logic
     capture_year=$(echo "$created_iso" | cut -d'-' -f1)
@@ -93,7 +108,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     fi
 
     if [[ "$file_type" == "Image" ]]; then
-        log "Image processing. Age: $age years."
+        db_log "INFO" "Image processing. Age: $age years." "$file_id"
         if [ "$age" -le 1 ]; then # 0-1 years old
             processing_command="convert \"$file_path\" -quality 95 \"$output_path\""
         elif [ "$age" -le 5 ]; then # 2-5 years old
@@ -102,7 +117,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
             processing_command="convert \"$file_path\" -quality \"$JPG_QUAL_LOW\" \"$output_path\""
         fi
     elif [[ "$file_type" == "Video" ]]; then
-        log "Video processing. Age: $age years."
+        db_log "INFO" "Video processing. Age: $age years." "$file_id"
         if [ "$age" -le 1 ]; then # 0-1 years old
             processing_command="ffmpeg -i \"$file_path\" -y -c:v libx265 -crf \"$VID_CRF_1080p\" -preset medium -vf \"scale='min(1920,iw)':-2\" -c:a aac -b:a 128k \"$output_path\""
         elif [ "$age" -le 5 ]; then # 2-5 years old
@@ -113,13 +128,14 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     fi
 
     # Execute processing
-    log "Executing: $processing_command"
+    db_log "INFO" "Executing: $processing_command" "$file_id"
     if eval "$processing_command"; then
-        log "SUCCESS: Processing complete for $file_name."
+        db_log "INFO" "SUCCESS: Processing complete for $file_name." "$file_id"
         
         # Get compressed size
         compressed_size_mb=$(du -m "$output_path" | cut -f1)
         now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S")
+        archive_file_path="$ARCHIVE_DIR/$(basename "$file_path")"
 
         # Update DB for success
         sqlite3 "$DB_PATH" "
@@ -128,7 +144,9 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
                 status = 'success',
                 compressed_size_mb = $compressed_size_mb,
                 last_compressed_date = '$now_iso',
-                nas_backup_status = 1
+                nas_backup_status = 1,
+                archive_path = '$archive_file_path',
+                processed_path = '$output_path'
             WHERE id = $file_id;
         "
         
@@ -138,9 +156,10 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
         # Archive the original file from staging
         mkdir -p "$ARCHIVE_DIR"
         mv "$file_path" "$ARCHIVE_DIR/"
+        db_log "INFO" "Archived original to $archive_file_path" "$file_id"
         
     else
-        log "ERROR: Processing FAILED for $file_name."
+        db_log "ERROR" "ERROR: Processing FAILED for $file_name." "$file_id"
         sqlite3 "$DB_PATH" "UPDATE files SET status = 'failed' WHERE id = $file_id;"
         sqlite3 "$DB_PATH" "UPDATE stats SET value = value + 1 WHERE key = 'processing_errors';"
         continue # Skip to next file
@@ -150,23 +169,32 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
 done
 
 # --- Upload Step ---
-log "--- Starting cloud upload of processed files ---"
+db_log "INFO" "--- Starting cloud upload of processed files ---"
 if [ -n "$(ls -A $PROCESSED_DIR 2>/dev/null)" ]; then
-    rclone copy "$PROCESSED_DIR" "$RCLONE_REMOTE:$RCLONE_DEST_PATH" --log-file="$LOG_DIR/rclone_$(date +%Y-%m-%d).log" -vv
+    # Using --log-file for rclone but also logging start/end to DB
+    rclone_log_file="$LOG_DIR/rclone_$(date +%Y-%m-%d).log"
+    db_log "INFO" "Rclone upload started. See log: $rclone_log_file"
+    
+    rclone copy "$PROCESSED_DIR" "$RCLONE_REMOTE:$RCLONE_DEST_PATH" --log-file="$rclone_log_file" -vv
     if [ $? -eq 0 ]; then
-        log "Rclone upload successful. Cleaning up processed files directory."
+        db_log "INFO" "Rclone upload successful. Cleaning up processed files directory."
+        
         # Find all files uploaded and update their DB status
         find "$PROCESSED_DIR" -type f -print0 | while IFS= read -r -d $'\0' uploaded_file; do
-            uploaded_file_name=$(basename "$uploaded_file" .jpg) # remove standard extension
-            uploaded_file_name="${uploaded_file_name}.*" # match original extension
-            sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1, icloud_upload_status = 1 WHERE file_name LIKE '${uploaded_file_name//\'/''}%';"
+            uploaded_file_name_no_ext=$(basename "$uploaded_file" .jpg | basename -s .mp4)
+            # Find the corresponding file_id
+            target_file_id=$(sqlite3 "$DB_PATH" "SELECT id FROM files WHERE file_name LIKE '${uploaded_file_name_no_ext//\'/''}%' LIMIT 1;")
+            if [ -n "$target_file_id" ]; then
+                 sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1, icloud_upload_status = 1 WHERE id = $target_file_id;"
+                 db_log "INFO" "Updated cloud backup status for file ID $target_file_id" "$target_file_id"
+            fi
         done
         rm -rf "$PROCESSED_DIR"/*
     else
-        log "ERROR: Rclone upload failed. Processed files are kept for next run."
+        db_log "ERROR" "Rclone upload failed. Processed files are kept for next run."
     fi
 else
-    log "No new files to upload."
+    db_log "INFO" "No new files to upload."
 fi
 
-log "--- Media processing run finished. Processed $processed_count files. ---"
+db_log "INFO" "--- Media processing run finished. Processed $processed_count files. ---"

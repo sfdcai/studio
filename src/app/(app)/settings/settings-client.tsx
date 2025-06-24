@@ -19,8 +19,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Terminal, KeyRound, Bot, Files, BarChart3, Settings as SettingsIcon } from "lucide-react"
+import { KeyRound, Files, BarChart3, Settings as SettingsIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { type Settings, handleSaveSettings } from "./actions"
 import { Separator } from "@/components/ui/separator"
@@ -66,17 +65,12 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
     }
   }
 
-  // Security Settings State - kept separate as they aren't persisted
-  const [currentPassword, setCurrentPassword] = React.useState("")
-  const [newPassword, setNewPassword] = React.useState("")
-
   return (
     <Tabs defaultValue="storage" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="storage">Storage & Backend</TabsTrigger>
         <TabsTrigger value="ai">AI</TabsTrigger>
-        <TabsTrigger value="security">Security</TabsTrigger>
       </TabsList>
       <TabsContent value="general">
         <Card>
@@ -136,7 +130,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="dbPath">Database File Path</Label>
-                      <Input id="dbPath" value={settings.dbPath} onChange={handleInputChange} placeholder="/data/nas/media_library.sqlite"/>
+                      <Input id="dbPath" value={settings.dbPath} onChange={handleInputChange} placeholder="/root/mediaflow/media_library.sqlite"/>
                   </div>
               </div>
             </div>
@@ -268,44 +262,6 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
           </CardContent>
           <CardFooter>
             <Button onClick={onSave}>Save AI Settings</Button>
-          </CardFooter>
-        </Card>
-      </TabsContent>
-      <TabsContent value="security">
-        <Card>
-          <CardHeader>
-            <CardTitle>Security</CardTitle>
-            <CardDescription>
-              Manage your account security settings.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-              <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Change Password</h3>
-                  <div className="space-y-2">
-                      <Label htmlFor="current-password">Current Password</Label>
-                      <Input id="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="new-password">New Password</Label>
-                      <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-                  </div>
-              </div>
-              <div className="border-t pt-6 space-y-4">
-                  <h3 className="text-lg font-medium">Two-Factor Authentication (2FA)</h3>
-                  <p className="text-sm text-muted-foreground">Sensitive actions require re-authentication.</p>
-                   <Alert>
-                      <Terminal className="h-4 w-4" />
-                      <AlertTitle>2FA Re-authentication Trigger</AlertTitle>
-                      <AlertDescription>
-                          To change critical settings like storage paths or security options, you will be prompted to re-authenticate using 2FA.
-                      </AlertDescription>
-                   </Alert>
-                  <Button variant="outline" onClick={() => toast({ title: "2FA Triggered", description: "A re-authentication request has been sent." })}>Trigger Re-authentication</Button>
-              </div>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={onSave}>Save Security Settings</Button>
           </CardFooter>
         </Card>
       </TabsContent>

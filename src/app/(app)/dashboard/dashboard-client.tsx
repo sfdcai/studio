@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts'
 import { DollarSign, Folder, AlertTriangle, CopyCheck } from "lucide-react"
 import { JobControlCard } from '@/components/job-control-card'
+import { SystemStatusCard } from "@/components/system-status-card"
+import { ProcessingHistoryPoint } from "@/lib/data"
 
 type DashboardClientProps = {
     totalFiles: number;
@@ -11,7 +13,7 @@ type DashboardClientProps = {
     duplicatesFound: number;
     processingErrors: number;
     filesByCategoryData: { name: string; files: number }[];
-    processingHistoryData: { name: string; processed: number; failed: number }[];
+    processingHistoryData: ProcessingHistoryPoint[];
 }
 
 export function DashboardClient({
@@ -25,7 +27,7 @@ export function DashboardClient({
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
-                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+                <h2 className="text-3xl font-bold tracking-tight">MediaFlow Dashboard</h2>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
@@ -38,7 +40,7 @@ export function DashboardClient({
                     <CardContent>
                         <div className="text-2xl font-bold">{totalFiles.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">
-                            from your media directory
+                            in your media library
                         </p>
                     </CardContent>
                 </Card>
@@ -52,7 +54,7 @@ export function DashboardClient({
                     <CardContent>
                         <div className="text-2xl font-bold">{storageSaved}</div>
                         <p className="text-xs text-muted-foreground">
-                            through compression (simulated)
+                            through compression
                         </p>
                     </CardContent>
                 </Card>
@@ -63,7 +65,7 @@ export function DashboardClient({
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{duplicatesFound.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground">saving 25.4 GB (simulated)</p>
+                        <p className="text-xs text-muted-foreground">deleted from staging</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -72,8 +74,8 @@ export function DashboardClient({
                         <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{processingErrors}</div>
-                        <p className="text-xs text-muted-foreground">based on simulated status</p>
+                        <div className="text-2xl font-bold">{processingErrors.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground">check logs for details</p>
                     </CardContent>
                 </Card>
             </div>
@@ -95,7 +97,10 @@ export function DashboardClient({
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-                <JobControlCard />
+                <div className="space-y-4">
+                  <JobControlCard />
+                  <SystemStatusCard />
+                </div>
             </div>
             <div className="grid gap-4">
                 <Card>

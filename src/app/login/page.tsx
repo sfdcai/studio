@@ -3,12 +3,9 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Film } from "lucide-react";
 import Link from "next/link";
 
@@ -24,35 +21,14 @@ export default function LoginPage() {
             </div>
           <CardTitle className="text-2xl">MediaFlow</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Automated Media Management System
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="m@example.com" required />
-          </div>
-          <div className="grid gap-2">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
-              <Link href="#" className="ml-auto inline-block text-sm underline" prefetch={false}>
-                Forgot your password?
-              </Link>
-            </div>
-            <Input id="password" type="password" required />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
+        <CardContent>
           <Button asChild className="w-full">
-            <Link href="/dashboard">Sign in</Link>
+            <Link href="/dashboard">Sign In</Link>
           </Button>
-           <div className="text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="#" className="underline" prefetch={false}>
-              Sign up
-            </Link>
-          </div>
-        </CardFooter>
+        </CardContent>
       </Card>
     </main>
   );
