@@ -1,6 +1,5 @@
-
-import { notFound } from 'next/navigation';
 import { getDb } from './db';
+import { notFound } from 'next/navigation';
 import type { MediaFile, LogEntry, ProcessingHistoryPoint } from './types';
 
 function mapRowToMediaFile(row: any): MediaFile {
@@ -55,7 +54,6 @@ export async function getStats(): Promise<{ [key: string]: number }> {
     stats[row.key] = row.value;
   }
   
-  // Also get the total file count dynamically
   const totalFilesRow = await db.get("SELECT COUNT(*) as count FROM files");
   stats['total_files'] = totalFilesRow.count;
 
@@ -73,7 +71,6 @@ export async function getLogsForFile(fileId: string): Promise<LogEntry[]> {
     const rows = await db.all('SELECT * FROM logs WHERE file_id = ? ORDER BY timestamp ASC', fileId);
     return rows as LogEntry[];
 }
-
 
 export async function getProcessingHistory(): Promise<ProcessingHistoryPoint[]> {
     const db = await getDb();
@@ -94,10 +91,8 @@ export async function getProcessingHistory(): Promise<ProcessingHistoryPoint[]> 
         SELECT * FROM daily_counts ORDER BY day ASC;
     `, sevenDaysAgoISO);
     
-    // Create a map for quick lookups
     const resultsMap = new Map(rows.map(row => [row.day, row]));
 
-    // Generate date range for the last 7 days
     const history: ProcessingHistoryPoint[] = [];
     for (let i = 6; i >= 0; i--) {
         const date = new Date();

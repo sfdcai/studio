@@ -1,7 +1,6 @@
-
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
-import { getSettings } from './settings';
+import { getSettings } from '@/app/(app)/settings/actions';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -13,22 +12,17 @@ export async function getDb() {
   const settings = await getSettings();
   let dbPath = settings.dbPath;
 
-  // If the path from settings is not absolute, resolve it relative to the project root.
   if (!path.isAbsolute(dbPath)) {
     dbPath = path.join(process.cwd(), dbPath);
   }
 
-  // Ensure the directory for the database file exists before trying to open it.
   const dir = path.dirname(dbPath);
   try {
       await fs.mkdir(dir, { recursive: true });
   } catch (err: any) {
       console.error(`Failed to create database directory at ${dir}. This may be a permissions issue.`);
-      // Re-throwing the error is important so the server startup fails clearly
-      // if it cannot create the necessary directory structure.
       throw new Error(`Database directory creation failed: ${err.message}`);
   }
-
 
   db = await open({
     filename: dbPath,
@@ -79,7 +73,6 @@ async function initDb(db: Database) {
     );
   `);
 
-  // Initialize stats if they don't exist
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('duplicates_found', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('storage_saved_mb', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('processing_errors', 0)");
