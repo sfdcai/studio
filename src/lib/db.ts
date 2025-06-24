@@ -1,4 +1,3 @@
-
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
 import { getSettings } from './settings';
@@ -44,7 +43,6 @@ async function initDb(db: Database) {
       camera TEXT,
       created_date TEXT NOT NULL,
       last_compressed_date TEXT,
-      next_compression_date TEXT,
       nas_backup_status INTEGER DEFAULT 0,
       gphotos_backup_status INTEGER DEFAULT 0,
       icloud_upload_status INTEGER DEFAULT 0,
@@ -76,9 +74,4 @@ async function initDb(db: Database) {
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('duplicates_found', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('storage_saved_mb', 0)");
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('processing_errors', 0)");
-  
-  // This stat is not set by the script but is useful for dashboard queries.
-  // We'll update it periodically or via a trigger if needed.
-  const fileCount = await db.get('SELECT COUNT(*) as count FROM files');
-  await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('total_files', ?)", fileCount.count);
 }

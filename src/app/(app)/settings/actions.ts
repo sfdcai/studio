@@ -1,4 +1,3 @@
-
 "use server";
 
 import { getSettings, saveSettings, generateAndSaveConfig } from "@/lib/settings";

@@ -173,9 +173,6 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                     <DetailRow icon={<Clock className="h-4 w-4"/>} label="Last Compressed">
                         {file.lastCompressed === "N/A" ? "N/A" : new Date(file.lastCompressed).toLocaleString()}
                     </DetailRow>
-                     <DetailRow icon={<Calendar className="h-4 w-4"/>} label="Next Compression">
-                         {file.nextCompression === "N/A" ? "N/A" : new Date(file.nextCompression).toLocaleDateString()}
-                    </DetailRow>
                 </CardContent>
             </Card>
             <Card>
@@ -188,7 +185,7 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                 <CardContent className="space-y-1">
                     <Separator className="mb-2"/>
                     <StatusRow icon={<HardDrive className="h-4 w-4" />} label="NAS Backup" status={file.nasBackup} />
-                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="Google Photos" status={file.googlePhotosBackup} />
+                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="Google Drive" status={file.googlePhotosBackup} />
                     <StatusRow icon={<Cloud className="h-4 w-4" />} label="iCloud" status={file.icloudUpload} />
                 </CardContent>
             </Card>

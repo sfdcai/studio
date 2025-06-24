@@ -9,10 +9,11 @@ export type Prerequisite = {
     name: string;
     command: string;
     status: 'Installed' | 'Not Found';
+    path?: string;
     helpText: string;
 };
 
-const prerequisites: Omit<Prerequisite, 'status'>[] = [
+const prerequisites: Omit<Prerequisite, 'status' | 'path'>[] = [
     { name: 'rclone', command: 'rclone', helpText: "Run 'sudo apt-get install rclone' and then 'rclone config'." },
     { name: 'ffmpeg', command: 'ffmpeg', helpText: "Run 'sudo apt-get install ffmpeg'." },
     { name: 'ImageMagick (convert)', command: 'convert', helpText: "Run 'sudo apt-get install imagemagick'." },
@@ -23,8 +24,8 @@ const prerequisites: Omit<Prerequisite, 'status'>[] = [
 export async function getSystemStatus(): Promise<Prerequisite[]> {
     const statusPromises = prerequisites.map(async (p) => {
         try {
-            await execAsync(`which ${p.command}`);
-            return { ...p, status: 'Installed' as const };
+            const { stdout } = await execAsync(`which ${p.command}`);
+            return { ...p, status: 'Installed' as const, path: stdout.trim() };
         } catch (error) {
             return { ...p, status: 'Not Found' as const };
         }
@@ -41,6 +42,8 @@ export async function runManualSync(): Promise<{ ok: boolean; message: string; o
         const { stdout, stderr } = await execAsync(`/bin/bash ${scriptPath}`, { cwd: process.cwd() });
         if (stderr) {
             console.warn('Manual sync process produced stderr:', stderr);
+            // Don't treat stderr as a failure, as some tools write warnings here.
+            // Let the user see it in the logs.
             return { ok: true, message: 'Sync completed with warnings. Check the Logs page for details.', output: stdout, error: stderr };
         }
         return { ok: true, message: 'Manual sync completed successfully! Check the File Explorer for new media.', output: stdout };

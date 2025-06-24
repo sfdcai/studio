@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -140,15 +139,6 @@ export const columns: ColumnDef<MediaFile>[] = [
     header: "Last Compressed",
     cell: ({ row }) => {
       const dateString = row.getValue("lastCompressed") as string;
-      if (dateString === "N/A") return <div className="text-center">-</div>;
-      return <div className="text-sm">{new Date(dateString).toLocaleDateString()}</div>
-    },
-  },
-  {
-    accessorKey: "nextCompression",
-    header: "Next Compression",
-    cell: ({ row }) => {
-       const dateString = row.getValue("nextCompression") as string;
       if (dateString === "N/A") return <div className="text-center">-</div>;
       return <div className="text-sm">{new Date(dateString).toLocaleDateString()}</div>
     },

@@ -20,5 +20,6 @@
   "aiAllowStats": false,
   "aiAllowSettings": false,
   "compressionEnabled": true,
-  "uploadEnabled": true
+  "uploadEnabled": true,
+  "icloudFolderStructure": "{created_date:%Y/%m/%d}"
 }

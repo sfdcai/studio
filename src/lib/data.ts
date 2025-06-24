@@ -1,4 +1,3 @@
-
 import { notFound } from 'next/navigation';
 import { getDb } from './db';
 import type { MediaFile, LogEntry, ProcessingHistoryPoint } from './types';
@@ -14,7 +13,6 @@ function mapRowToMediaFile(row: any): MediaFile {
         camera: row.camera || 'Unknown',
         createdDate: row.created_date,
         lastCompressed: row.last_compressed_date || "N/A",
-        nextCompression: row.next_compression_date || "N/A",
         nasBackup: !!row.nas_backup_status,
         googlePhotosBackup: !!row.gphotos_backup_status,
         icloudUpload: !!row.icloud_upload_status,
