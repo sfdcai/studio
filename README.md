@@ -120,6 +120,18 @@ To manage the running application, you can use these `pm2` commands:
 *   View logs: `sudo pm2 logs mediaflow-app`
 *   Restart the app: `sudo pm2 restart mediaflow-app`
 
+#### 4. Updating the Application
+When you make changes to the application code and push them to your GitHub repository, you need to update the running application on your server. The `deploy_ui.sh` script makes this easy.
+
+1.  **Push your code changes** to your main branch on GitHub.
+2.  **Connect to your server** via SSH.
+3.  **Navigate to the script location** (your repository folder).
+4.  **Run the restart command:**
+    ```bash
+    sudo ./deploy_ui.sh --restart
+    ```
+This command safely pulls the latest code from GitHub, reinstalls any new dependencies, rebuilds the Next.js application, and gracefully restarts it using `pm2`.
+
 ---
 
 ## Usage Workflow 🚀
