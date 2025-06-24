@@ -46,28 +46,31 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
 
-const data: Payment[] = [
-    { id: "m5gr84i9", amount: 316, status: "success", camera: "Sony A7III", date: "2023-10-25" },
-    { id: "3u1reuv4", amount: 242, status: "success", camera: "Canon R5", date: "2023-10-25" },
-    { id: "derv1ws0", amount: 837, status: "processing", camera: "Nikon Z6", date: "2023-10-26" },
-    { id: "5kma53ae", amount: 874, status: "success", camera: "Sony A7III", date: "2023-10-27" },
-    { id: "bhqecj4p", amount: 721, status: "failed", camera: "iPhone 14 Pro", date: "2023-10-28" },
-    { id: "m5gr84i9-2", amount: 316, status: "success", camera: "Sony A7III", date: "2023-10-25" },
-    { id: "3u1reuv4-2", amount: 242, status: "success", camera: "Canon R5", date: "2023-10-25" },
-    { id: "derv1ws0-2", amount: 837, status: "processing", camera: "Nikon Z6", date: "2023-10-26" },
-    { id: "5kma53ae-2", amount: 874, status: "success", camera: "iPhone 14 Pro", date: "2023-10-27" },
-    { id: "bhqecj4p-2", amount: 721, status: "failed", camera: "iPhone 14 Pro", date: "2023-10-28" },
+const data: MediaFile[] = [
+    { id: "m5gr84i9", originalSize: 420, compressedSize: 316, status: "success", camera: "Sony A7III", date: "2023-10-25", lastCompressed: "2023-10-25T10:00:00Z", nextCompression: "2024-10-25" },
+    { id: "3u1reuv4", originalSize: 350, compressedSize: 242, status: "success", camera: "Canon R5", date: "2023-10-25", lastCompressed: "2023-10-25T11:00:00Z", nextCompression: "2024-10-25" },
+    { id: "derv1ws0", originalSize: 950, compressedSize: 837, status: "processing", camera: "Nikon Z6", date: "2023-10-26", lastCompressed: "2023-10-26T12:00:00Z", nextCompression: "2024-10-26" },
+    { id: "5kma53ae", originalSize: 1000, compressedSize: 874, status: "success", camera: "Sony A7III", date: "2023-10-27", lastCompressed: "2023-10-27T13:00:00Z", nextCompression: "2024-10-27" },
+    { id: "bhqecj4p", originalSize: 800, compressedSize: 721, status: "failed", camera: "iPhone 14 Pro", date: "2023-10-28", lastCompressed: "N/A", nextCompression: "N/A" },
+    { id: "m5gr84i9-2", originalSize: 420, compressedSize: 316, status: "success", camera: "Sony A7III", date: "2023-10-25", lastCompressed: "2023-10-25T14:00:00Z", nextCompression: "2024-10-25" },
+    { id: "3u1reuv4-2", originalSize: 350, compressedSize: 242, status: "success", camera: "Canon R5", date: "2023-10-25", lastCompressed: "2023-10-25T15:00:00Z", nextCompression: "2024-10-25" },
+    { id: "derv1ws0-2", originalSize: 950, compressedSize: 837, status: "processing", camera: "Nikon Z6", date: "2023-10-26", lastCompressed: "2023-10-26T16:00:00Z", nextCompression: "2024-10-26" },
+    { id: "5kma53ae-2", originalSize: 1000, compressedSize: 874, status: "success", camera: "iPhone 14 Pro", date: "2023-10-27", lastCompressed: "2023-10-27T17:00:00Z", nextCompression: "2024-10-27" },
+    { id: "bhqecj4p-2", originalSize: 800, compressedSize: 721, status: "failed", camera: "iPhone 14 Pro", date: "2023-10-28", lastCompressed: "N/A", nextCompression: "N/A" },
 ]
 
-export type Payment = {
+export type MediaFile = {
   id: string
-  amount: number
+  originalSize: number
+  compressedSize: number
   status: "pending" | "processing" | "success" | "failed"
   camera: string,
   date: string
+  lastCompressed: string
+  nextCompression: string
 }
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<MediaFile>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -129,12 +132,37 @@ export const columns: ColumnDef<Payment>[] = [
     cell: ({ row }) => <div>{row.getValue("camera")}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Size</div>,
+    accessorKey: "originalSize",
+    header: () => <div className="text-right">Original Size</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
+      const size = parseFloat(row.getValue("originalSize"))
+      return <div className="text-right font-medium">{size} MB</div>
+    },
+  },
+  {
+    accessorKey: "compressedSize",
+    header: () => <div className="text-right">Compressed Size</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("compressedSize"))
       return <div className="text-right font-medium">{amount} MB</div>
+    },
+  },
+  {
+    accessorKey: "lastCompressed",
+    header: "Last Compressed",
+    cell: ({ row }) => {
+      const dateString = row.getValue("lastCompressed") as string;
+      if (dateString === "N/A") return <div className="text-center">-</div>;
+      return <div className="text-sm">{new Date(dateString).toLocaleDateString()}</div>
+    },
+  },
+  {
+    accessorKey: "nextCompression",
+    header: "Next Compression",
+    cell: ({ row }) => {
+       const dateString = row.getValue("nextCompression") as string;
+      if (dateString === "N/A") return <div className="text-center">-</div>;
+      return <div className="text-sm">{new Date(dateString).toLocaleDateString()}</div>
     },
   },
   {
@@ -168,7 +196,10 @@ export default function FileExplorerPage() {
     []
   )
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+    React.useState<VisibilityState>({
+      lastCompressed: false,
+      nextCompression: false,
+    })
   const [rowSelection, setRowSelection] = React.useState({})
   const [date, setDate] = React.useState<Date>()
 
@@ -190,6 +221,14 @@ export default function FileExplorerPage() {
       rowSelection,
     },
   })
+  
+  React.useEffect(() => {
+    if (date) {
+      table.getColumn("date")?.setFilterValue(format(date, "yyyy-MM-dd"));
+    } else {
+      table.getColumn("date")?.setFilterValue("");
+    }
+  }, [date, table]);
 
   return (
     <div className="w-full p-4 md:p-8">
@@ -253,7 +292,7 @@ export default function FileExplorerPage() {
                         column.toggleVisibility(!!value)
                         }
                     >
-                        {column.id}
+                        {column.id.replace(/([A-Z])/g, ' $1').trim()}
                     </DropdownMenuCheckboxItem>
                     )
                 })}

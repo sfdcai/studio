@@ -21,6 +21,13 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function SettingsPage() {
   return (
@@ -75,13 +82,72 @@ export default function SettingsPage() {
                 <Input id="drivePath" defaultValue="/Apps/MediaFlow/processed" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="compression">Compression Level</Label>
+                <Label htmlFor="compression">Initial Compression Level</Label>
                 <div className="flex items-center space-x-4">
                     <span>Low</span>
                     <Slider id="compression" defaultValue={[60]} max={100} step={1} />
                     <span>High</span>
                 </div>
               </div>
+
+              <div className="border-t pt-6 space-y-4">
+                <h3 className="text-lg font-medium">Progressive Compression</h3>
+                <p className="text-sm text-muted-foreground">
+                  Define how files are re-compressed over time to save more space.
+                </p>
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="year-1-compression">After 1 Year</Label>
+                        <Select defaultValue="1080p">
+                            <SelectTrigger id="year-1-compression" className="w-[180px]">
+                            <SelectValue placeholder="Select quality" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="original">Keep Original</SelectItem>
+                            <SelectItem value="1080p">1080p</SelectItem>
+                            <SelectItem value="720p">720p</SelectItem>
+                            <SelectItem value="640p">640p</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="year-2-compression">After 2 Years</Label>
+                        <Select defaultValue="720p">
+                            <SelectTrigger id="year-2-compression" className="w-[180px]">
+                            <SelectValue placeholder="Select quality" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="original">Keep Original</SelectItem>
+                                <SelectItem value="1080p">1080p</SelectItem>
+                                <SelectItem value="720p">720p</SelectItem>
+                                <SelectItem value="640p">640p</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="year-5-compression">After 5 Years</Label>
+                        <Select defaultValue="640p">
+                            <SelectTrigger id="year-5-compression" className="w-[180px]">
+                            <SelectValue placeholder="Select quality" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="original">Keep Original</SelectItem>
+                                <SelectItem value="1080p">1080p</SelectItem>
+                                <SelectItem value="720p">720p</SelectItem>
+                                <SelectItem value="640p">640p</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                 <div className="flex items-center space-x-2 pt-2">
+                    <Switch id="exif-transfer" defaultChecked />
+                    <Label htmlFor="exif-transfer">Preserve EXIF Data</Label>
+                </div>
+                 <p className="text-sm text-muted-foreground pt-1">
+                    Ensures all metadata like camera settings, location, and date are retained during compression.
+                 </p>
+              </div>
+
               <div className="border-t pt-6 space-y-4">
                 <h3 className="text-lg font-medium">iCloud Photos</h3>
                  <div className="flex items-center space-x-2">
