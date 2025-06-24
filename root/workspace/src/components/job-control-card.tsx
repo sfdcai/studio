@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { PlayCircle, Loader2, Terminal, Link as LinkIcon } from "lucide-react";
+import { PlayCircle, Loader2, Terminal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { runManualSync } from "@/app/(app)/dashboard/actions";
 import Link from "next/link";
