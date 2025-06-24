@@ -46,6 +46,7 @@ db_log() {
 }
 
 db_log "INFO" "--- Starting media processing run with limit: $PROCESS_LIMIT ---"
+db_log "INFO" "Config loaded. COMPRESSION_ENABLED is set to: '$COMPRESSION_ENABLED'"
 processed_count=0
 
 # Ensure directories exist
@@ -73,8 +74,9 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     fi
 
     # 2. Get metadata and insert into DB as 'pending'
-    created_iso=$(exiftool -s -s -s -d "%Y-%m-%dT%H:%M:%S" -DateTimeOriginal "$file_path" || date -r "$file_path" -u +"%Y-%m-%dT%H:%M:%S")
-    camera_model=$(exiftool -s -s -s -Model "$file_path" || echo "Unknown")
+    # Use a more robust method to get the creation date, trying multiple EXIF tags before falling back to the file's modification date.
+    created_iso=$(exiftool -q -p '$CreateDate' -d "%Y-%m-%dT%H:%M:%S" "$file_path" 2>/dev/null || exiftool -q -p '$ModifyDate' -d "%Y-%m-%dT%H:%M:%S" "$file_path" 2>/dev/null || exiftool -q -p '$DateTimeOriginal' -d "%Y-%m-%dT%H:%M:%S" "$file_path" 2>/dev/null || date -r "$file_path" -u +"%Y-%m-%dT%H:%M:%S")
+    camera_model=$(exiftool -q -p '$Model' "$file_path" 2>/dev/null || echo "Unknown")
     original_size_mb=$(du -m "$file_path" | cut -f1)
     
     extension="${file_path##*.}"
@@ -85,12 +87,13 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     fi
 
     db_log "INFO" "NEW FILE: Inserting $file_name into database as pending."
-    sqlite3 "$DB_PATH" "INSERT INTO files (file_hash, file_name, file_type, original_size_mb, status, camera, created_date, staging_path) VALUES ('$file_hash', '$file_name', '$file_type', $original_size_mb, 'pending', '$camera_model', '$created_iso', '$file_path');"
+    sqlite3 "$DB_PATH" "INSERT INTO files (file_hash, file_name, file_type, original_size_mb, status, camera, created_date, staging_path, archive_path, processed_path) VALUES ('$file_hash', '$file_name', '$file_type', $original_size_mb, 'pending', '$camera_model', '$created_iso', '$file_path', '', '');"
     file_id=$(sqlite3 "$DB_PATH" "SELECT last_insert_rowid();")
     
     # 3. Mark as processing
     sqlite3 "$DB_PATH" "UPDATE files SET status = 'processing' WHERE id = $file_id;"
     db_log "INFO" "Starting processing." "$file_id"
+    db_log "INFO" "Checking compression setting. COMPRESSION_ENABLED='${COMPRESSION_ENABLED}'" "$file_id"
     
     # Check if compression is enabled
     if [ "$COMPRESSION_ENABLED" = "true" ]; then
@@ -98,7 +101,14 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
         # 4. Tiered Compression Logic
         capture_year=$(echo "$created_iso" | cut -d'-' -f1)
         current_year=$(date +'%Y')
-        age=$((current_year - capture_year))
+        age=0 # Default age to 0 (highest quality)
+
+        # Check if capture_year is a valid number before calculating age
+        if [[ "$capture_year" =~ ^[0-9]+$ ]] && [ "$capture_year" -gt 1900 ]; then
+             age=$((current_year - capture_year))
+        else
+            db_log "WARN" "Could not determine a valid capture year from metadata ('$created_iso'). Defaulting age to 0." "$file_id"
+        fi
         
         output_path=""
         processing_command=""
@@ -130,9 +140,12 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
             fi
         fi
 
-        # Execute processing
+        # Execute processing and capture stderr to a variable
         db_log "INFO" "Executing: $processing_command" "$file_id"
-        if eval "$processing_command"; then
+        error_output=$(eval "$processing_command" 2>&1)
+        exit_code=$?
+        
+        if [ $exit_code -eq 0 ]; then
             db_log "INFO" "SUCCESS: Processing complete for $file_name." "$file_id"
             
             # Get compressed size
@@ -162,7 +175,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
             db_log "INFO" "Archived original to $archive_file_path" "$file_id"
             
         else
-            db_log "ERROR" "ERROR: Processing FAILED for $file_name." "$file_id"
+            db_log "ERROR" "ERROR: Processing command failed with exit code $exit_code. Output: $error_output" "$file_id"
             sqlite3 "$DB_PATH" "UPDATE files SET status = 'failed' WHERE id = $file_id;"
             sqlite3 "$DB_PATH" "UPDATE stats SET value = value + 1 WHERE key = 'processing_errors';"
             continue # Skip to next file
