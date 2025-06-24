@@ -170,5 +170,3 @@ echo -e "Your application is now running."
 echo -e "You can check its status with the command: ${GREEN}pm2 list${NC}"
 echo -e "You can view the application logs with: ${GREEN}pm2 logs $PM2_APP_NAME${NC}"
 echo -e "The full installation log is located at: ${GREEN}${LOG_FILE}${NC}"
-
-    

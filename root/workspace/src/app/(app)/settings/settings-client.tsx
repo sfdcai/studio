@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -269,5 +270,3 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
     </Tabs>
   )
 }
-
-    

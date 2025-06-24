@@ -33,5 +33,3 @@ export async function getSystemStatus(): Promise<Prerequisite[]> {
 
     return Promise.all(statusPromises);
 }
-
-    
