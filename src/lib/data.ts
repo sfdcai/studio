@@ -77,13 +77,17 @@ async function syncMediaDirectory() {
             
             const existing = await db.get('SELECT id FROM files WHERE file_hash = ?', fileHash);
             if (existing) {
-                continue; // Skip duplicate
+                // It's a duplicate, increment the counter
+                await db.run("UPDATE stats SET value = value + 1 WHERE key = 'duplicates_found'");
+                // Here you might want to delete the file from staging
+                // For this example, we'll just skip it.
+                continue; 
             }
 
             const fileExtension = path.extname(fileName).toLowerCase();
             const fileType = ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(fileExtension) ? "Image" : "Video";
             const originalSizeMb = parseFloat((stats.size / (1024 * 1024)).toFixed(2));
-            const camera = cameras[Math.floor(Math.random() * cameras.length)]; // Still mocking this for now
+            const camera = cameras[Math.floor(Math.random() * cameras.length)];
 
             await db.run(
                 'INSERT INTO files (file_hash, file_name, file_type, original_size_mb, status, camera, created_date, staging_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -113,4 +117,14 @@ export async function getMediaFile(id: string): Promise<MediaFile> {
         notFound();
     }
     return mapRowToMediaFile(row);
+}
+
+export async function getStats(): Promise<{ [key: string]: number }> {
+  const db = await getDb();
+  const rows = await db.all('SELECT key, value FROM stats');
+  const stats: { [key: string]: number } = {};
+  for (const row of rows) {
+    stats[row.key] = row.value;
+  }
+  return stats;
 }

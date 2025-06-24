@@ -47,4 +47,14 @@ async function initDb(db: Database) {
       staging_path TEXT NOT NULL
     );
   `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS stats (
+      key TEXT PRIMARY KEY,
+      value INTEGER NOT NULL DEFAULT 0
+    );
+  `);
+
+  // Initialize stats if they don't exist
+  await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('duplicates_found', 0)");
 }

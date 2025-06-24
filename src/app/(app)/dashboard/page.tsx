@@ -1,4 +1,4 @@
-import { getMediaFiles } from '@/lib/data';
+import { getMediaFiles, getStats } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
 
 export const revalidate = 0; // Disable caching
@@ -23,6 +23,7 @@ const formatBytes = (mb: number) => {
 
 export default async function DashboardPage() {
   const data = await getMediaFiles();
+  const stats = await getStats();
 
   const totalFiles = data.length;
   const storageSaved = data.reduce((sum, file) => {
@@ -32,7 +33,7 @@ export default async function DashboardPage() {
     return sum;
   }, 0);
   const processingErrors = data.filter(file => file.status === 'failed').length;
-  const duplicatesFound = 1287; // This would be calculated on the backend
+  const duplicatesFound = stats.duplicates_found || 0;
 
   const filesByCategory = data.reduce((acc, file) => {
     const { type } = file;

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import { getSettings } from "@/lib/settings";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,13 +15,15 @@ export const metadata: Metadata = {
   description: "Manage your media effortlessly.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSettings();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={cn({ 'dark': settings.isDarkMode })} suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
         {children}
         <Toaster />
