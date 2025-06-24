@@ -46,6 +46,7 @@ db_log() {
 }
 
 db_log "INFO" "--- Starting media processing run with limit: $PROCESS_LIMIT ---"
+db_log "INFO" "Config loaded. COMPRESSION_ENABLED is set to: '$COMPRESSION_ENABLED'"
 processed_count=0
 
 # Ensure directories exist
@@ -73,8 +74,9 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     fi
 
     # 2. Get metadata and insert into DB as 'pending'
-    created_iso=$(exiftool -s -s -s -d "%Y-%m-%dT%H:%M:%S" -DateTimeOriginal "$file_path" || date -r "$file_path" -u +"%Y-%m-%dT%H:%M:%S")
-    camera_model=$(exiftool -s -s -s -Model "$file_path" || echo "Unknown")
+    # Use a more robust method to get the creation date, trying multiple EXIF tags before falling back to the file's modification date.
+    created_iso=$(exiftool -q -p '$CreateDate' -d "%Y-%m-%dT%H:%M:%S" "$file_path" 2>/dev/null || exiftool -q -p '$ModifyDate' -d "%Y-%m-%dT%H:%M:%S" "$file_path" 2>/dev/null || exiftool -q -p '$DateTimeOriginal' -d "%Y-%m-%dT%H:%M:%S" "$file_path" 2>/dev/null || date -r "$file_path" -u +"%Y-%m-%dT%H:%M:%S")
+    camera_model=$(exiftool -q -p '$Model' "$file_path" 2>/dev/null || echo "Unknown")
     original_size_mb=$(du -m "$file_path" | cut -f1)
     
     extension="${file_path##*.}"
@@ -91,6 +93,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     # 3. Mark as processing
     sqlite3 "$DB_PATH" "UPDATE files SET status = 'processing' WHERE id = $file_id;"
     db_log "INFO" "Starting processing." "$file_id"
+    db_log "INFO" "Checking compression setting. COMPRESSION_ENABLED='${COMPRESSION_ENABLED}'" "$file_id"
     
     # Check if compression is enabled
     if [ "$COMPRESSION_ENABLED" = "true" ]; then
@@ -162,7 +165,8 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
             db_log "INFO" "Archived original to $archive_file_path" "$file_id"
             
         else
-            db_log "ERROR" "ERROR: Processing FAILED for $file_name." "$file_id"
+            local exit_code=$?
+            db_log "ERROR" "ERROR: Processing command failed with exit code $exit_code. Command was: $processing_command" "$file_id"
             sqlite3 "$DB_PATH" "UPDATE files SET status = 'failed' WHERE id = $file_id;"
             sqlite3 "$DB_PATH" "UPDATE stats SET value = value + 1 WHERE key = 'processing_errors';"
             continue # Skip to next file
