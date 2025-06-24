@@ -108,7 +108,9 @@ sudo systemctl start media_processor.timer
 ---
 
 ### **Part 3: Updating the Application**
-When you make changes to the application code and push them to your GitHub repository, you need to update the running application on your server. The `deploy_ui.sh` script makes this easy.
+When you make changes to the application code and push them to your GitHub repository, you need to update the running application on your server.
+
+> **Important Note:** Your server runs a local copy of the code. Pushing changes to GitHub does **not** automatically update the live application. You must run the restart command below to see your changes.
 
 1.  **Push your code changes** to your main branch on GitHub.
 2.  **Connect to your server** via SSH.
