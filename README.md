@@ -62,28 +62,14 @@ Run `rclone config` to set up your Google Drive remote (or any other cloud provi
 
 This section describes how to deploy the Next.js web application and configure the entire system.
 
-#### 1. Configure and Run the Deployment Script
-The `deploy_ui.sh` script automates the installation of Node.js, dependencies, and configures the `pm2` process manager to run the app in a production environment.
+#### 1. Quick Start: Initial Deployment
+To set up the Web UI on a fresh server, you can use the following command. It downloads the deployment script from your repository, makes it executable, and starts the automated setup process.
 
-Before running the script, you must edit it to point to your repository.
 ```bash
-nano deploy_ui.sh
-```
-Find the `REPO_URL` variable and change it to your repository's SSH URL.
-```sh
-# Before
-REPO_URL="git@github.com:your_username/your_repo.git"
-
-# After (example)
-REPO_URL="git@github.com:your-name/automated-media-server.git"
+wget https://raw.githubusercontent.com/sfdcai/studio/main/deploy_ui.sh && chmod +x deploy_ui.sh && sudo ./deploy_ui.sh
 ```
 
-Now, execute the script. It will handle system updates, Node.js installation, cloning the repo, building the app, and running it with `pm2`.
-```bash
-chmod +x deploy_ui.sh
-sudo ./deploy_ui.sh
-```
-The script will prompt you once to add the server's SSH key to your GitHub repository as a "Deploy Key". Follow the on-screen instructions.
+The script will handle system updates, Node.js installation, cloning the repository, building the app, and running it with `pm2`. It will prompt you once to add the server's SSH key to your GitHub repository as a "Deploy Key". Follow the on-screen instructions.
 
 #### 2. Configure the System via the Web UI
 Once the script is finished, the application will be running.
