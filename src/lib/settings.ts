@@ -44,10 +44,10 @@ const defaultSettings: Settings = {
   archiveDir: "/data/nas/archive",
   processedDir: "/data/nas/processed",
   logDir: "/data/nas/logs",
-  dbPath: path.join(process.cwd(), 'media_library.sqlite'),
+  dbPath: "media_library.sqlite",
   rcloneRemote: "gdrive",
-  drivePath: "My Media/Optimized",
-  icloudUser: "your_apple_id@email.com",
+  drivePath: "/Apps/MediaFlow/processed",
+  icloudUser: "",
   processLimit: 1000,
   jpgQualityMedium: 85,
   jpgQualityLow: 75,
@@ -90,6 +90,11 @@ export async function saveSettings(settings: Settings): Promise<void> {
 }
 
 export async function generateAndSaveConfig(settings: Settings): Promise<void> {
+    // The backend scripts need an absolute path to the database.
+    const absoluteDbPath = path.isAbsolute(settings.dbPath)
+      ? settings.dbPath
+      : path.join(process.cwd(), settings.dbPath);
+
     const configContent = `
 # =================================================
 #  Configuration for Media Processing Script
@@ -104,7 +109,7 @@ STAGING_DIR="${settings.stagingDir}"
 ARCHIVE_DIR="${settings.archiveDir}"
 PROCESSED_DIR="${settings.processedDir}"
 LOG_DIR="${settings.logDir}"
-DB_PATH="${settings.dbPath}"
+DB_PATH="${absoluteDbPath}"
 
 # --- Rclone Configuration ---
 RCLONE_REMOTE="${settings.rcloneRemote}"

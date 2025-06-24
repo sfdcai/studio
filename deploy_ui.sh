@@ -30,6 +30,7 @@ REPO_URL="git@github.com:sfdcai/studio.git"
 APP_DIR="/root/mediaflow"
 PM2_APP_NAME="mediaflow-app"
 SSH_CONFIRM_FILE="$HOME/.ssh/github_key_verified"
+DEPLOY_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 # --- Style Functions ---
 GREEN='\033[0;32m'
@@ -47,12 +48,9 @@ safe_restart() {
   echo "Pulling latest code from GitHub..."
   git pull
 
-  echo "Cleaning up duplicate workspace directory if it exists..."
-  if [ -d "root/workspace" ]; then
-      echo "Found duplicate workspace directory. Removing it..."
-      rm -rf "root/workspace"
-      echo "Cleanup successful."
-  fi
+  echo "Copying essential backend scripts into app directory..."
+  cp "$DEPLOY_SCRIPT_DIR/run_all.sh" .
+  cp "$DEPLOY_SCRIPT_DIR/process_media.sh" .
 
   echo "Installing dependencies..."
   npm install
@@ -153,15 +151,10 @@ fi
 
 cd $APP_DIR
 
-# Clean up duplicate workspace directory if it exists
-echo -e "\n${GREEN}---> Cleaning up old workspace directory if it exists...${NC}"
-if [ -d "root/workspace" ]; then
-    echo "Found duplicate workspace directory. Removing it..."
-    rm -rf "root/workspace"
-    echo "Cleanup successful."
-else
-    echo "No duplicate workspace found. Skipping cleanup."
-fi
+# Copy essential backend scripts into app directory to ensure they can be found by the UI
+echo -e "\n${GREEN}---> Copying backend scripts into application directory...${NC}"
+cp "$DEPLOY_SCRIPT_DIR/run_all.sh" .
+cp "$DEPLOY_SCRIPT_DIR/process_media.sh" .
 
 # 5. INSTALL DEPENDENCIES & BUILD
 echo -e "\n${GREEN}---> 5. Installing npm dependencies...${NC}"

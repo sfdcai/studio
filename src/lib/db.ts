@@ -12,7 +12,12 @@ export async function getDb() {
   if (db) return db;
 
   const settings = await getSettings();
-  const dbPath = settings.dbPath;
+  let dbPath = settings.dbPath;
+
+  // If the path from settings is not absolute, resolve it relative to the project root.
+  if (!path.isAbsolute(dbPath)) {
+    dbPath = path.join(process.cwd(), dbPath);
+  }
 
   // Ensure the directory for the database file exists before trying to open it.
   const dir = path.dirname(dbPath);

@@ -5,7 +5,7 @@
   "archiveDir": "/data/nas/archive",
   "processedDir": "/data/nas/processed",
   "logDir": "/data/nas/logs",
-  "dbPath": "/home/user/studio/media_library.sqlite",
+  "dbPath": "media_library.sqlite",
   "rcloneRemote": "gdrive",
   "drivePath": "/Apps/MediaFlow/processed",
   "icloudUser": "",
@@ -20,15 +20,5 @@
   "aiAllowStats": false,
   "aiAllowSettings": false,
   "compressionEnabled": true,
-  "uploadEnabled": true,
-  "nasPath": "/mnt/nas/media/incoming",
-  "compression": 60,
-  "year1Compression": "1080p",
-  "year2Compression": "720p",
-  "year5Compression": "640p",
-  "preserveExif": true,
-  "icloudSync": false,
-  "icloudPass": "",
-  "dailyLimit": 1000,
-  "deleteYesterday": false
+  "uploadEnabled": true
 }
