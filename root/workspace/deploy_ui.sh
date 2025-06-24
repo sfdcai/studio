@@ -26,7 +26,7 @@ error_handler() {
 trap 'error_handler $LINENO' ERR
 
 # --- Script Configuration ---
-REPO_URL="git@github.com:your_username/your_repo.git" # <-- UPDATE THIS!
+REPO_URL="git@github.com:sfdcai/studio.git" # <-- The user's repository
 APP_DIR="/root/mediaflow"
 PM2_APP_NAME="mediaflow-app"
 SSH_CONFIRM_FILE="$HOME/.ssh/github_key_verified"
