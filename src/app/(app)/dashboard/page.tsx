@@ -6,14 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { DollarSign, Folder, AlertTriangle, CopyCheck, Play, Square } from "lucide-react"
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-
-const filesByCategoryData = [
-  { name: 'Photos', files: 4000 },
-  { name: 'Videos', files: 3000 },
-  { name: 'Documents', files: 2000 },
-  { name: 'Audio', files: 2780 },
-  { name: 'Archives', files: 1890 },
-];
+import { data, MediaFile } from '@/lib/data'
 
 const processingHistoryData = [
   { name: 'Mon', processed: 20, failed: 1 },
@@ -25,8 +18,36 @@ const processingHistoryData = [
   { name: 'Sun', processed: 55, failed: 2 },
 ];
 
+const formatBytes = (mb: number) => {
+    if (mb < 1024) return `${mb.toFixed(1)} MB`;
+    const gb = mb / 1024;
+    if (gb < 1024) return `${gb.toFixed(1)} GB`;
+    const tb = gb / 1024;
+    return `${tb.toFixed(1)} TB`;
+};
+
 export default function DashboardPage() {
   const [isJobRunning, setIsJobRunning] = React.useState(true)
+
+  const totalFiles = data.length;
+  const storageSaved = data.reduce((sum, file) => {
+    if (file.status === 'success' || file.status === 'processing') {
+      return sum + (file.originalSize - file.compressedSize);
+    }
+    return sum;
+  }, 0);
+  const processingErrors = data.filter(file => file.status === 'failed').length;
+  const duplicatesFound = 1287; // This would be calculated on the backend
+
+  const filesByCategory = data.reduce((acc, file) => {
+    const { type } = file;
+    const categoryName = type === 'Image' ? 'Images' : 'Videos';
+    acc[categoryName] = (acc[categoryName] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const filesByCategoryData = Object.entries(filesByCategory).map(([name, files]) => ({ name, files }));
+
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -42,7 +63,7 @@ export default function DashboardPage() {
             <Folder className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12,345</div>
+            <div className="text-2xl font-bold">{totalFiles.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
             </p>
@@ -56,7 +77,7 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1.2 TB</div>
+            <div className="text-2xl font-bold">{formatBytes(storageSaved)}</div>
             <p className="text-xs text-muted-foreground">
               through compression
             </p>
@@ -68,7 +89,7 @@ export default function DashboardPage() {
             <CopyCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,287</div>
+            <div className="text-2xl font-bold">{duplicatesFound.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">saving 25.4 GB</p>
           </CardContent>
         </Card>
@@ -78,7 +99,7 @@ export default function DashboardPage() {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">57</div>
+            <div className="text-2xl font-bold">{processingErrors}</div>
             <p className="text-xs text-muted-foreground">in the last 7 days</p>
           </CardContent>
         </Card>

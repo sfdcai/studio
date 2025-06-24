@@ -74,7 +74,11 @@ export const columns: ColumnDef<MediaFile>[] = [
   {
     accessorKey: "id",
     header: "Filename",
-    cell: ({ row }) => <div className="capitalize font-mono text-xs">{row.getValue("id")}.jpg</div>,
+    cell: ({ row }) => {
+        const file = row.original;
+        const extension = file.type === "Image" ? "jpg" : "mp4";
+        return <div className="capitalize font-mono text-xs">{file.id}.{extension}</div>
+    },
   },
   {
     accessorKey: "createdDate",
@@ -89,7 +93,7 @@ export const columns: ColumnDef<MediaFile>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue("createdDate")}</div>,
+    cell: ({ row }) => <div>{new Date(row.getValue("createdDate")).toLocaleDateString()}</div>,
   },
   {
     accessorKey: "status",

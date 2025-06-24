@@ -43,6 +43,7 @@ export default function FileDetailsPage({ params }: { params: { id: string } }) 
     notFound();
   }
   
+  const extension = file.type === "Image" ? "jpg" : "mp4";
   const statusVariant = {
     "success": "default",
     "processing": "secondary",
@@ -60,7 +61,7 @@ export default function FileDetailsPage({ params }: { params: { id: string } }) 
             <span className="sr-only">Back to files</span>
           </Link>
         </Button>
-        <h2 className="text-3xl font-bold tracking-tight truncate">{file.id}.jpg</h2>
+        <h2 className="text-3xl font-bold tracking-tight truncate">{file.id}.{extension}</h2>
       </div>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
