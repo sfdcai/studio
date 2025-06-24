@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
 import { handleAnalysis, State } from "./actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Sparkles, Bot, Info, ShieldAlert, CircleAlert, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
@@ -59,7 +59,7 @@ const getSeverityIcon = (severity: 'Info' | 'Low' | 'Medium' | 'High') => {
 
 export default function AnalyzePage() {
     const initialState: State = { message: "", error: undefined };
-    const [state, dispatch] = useFormState(handleAnalysis, initialState);
+    const [state, dispatch] = useActionState(handleAnalysis, initialState);
     const { toast } = useToast();
 
     useEffect(() => {
