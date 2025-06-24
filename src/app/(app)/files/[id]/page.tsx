@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Camera, Clock, FileText, HardDrive, Zap, Tag } from "lucide-react";
+import { ArrowLeft, Calendar, Camera, Clock, HardDrive, Zap, Tag, Cloud } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const DetailRow = ({ icon, label, children }: { icon: React.ReactNode, label: string, children: React.ReactNode }) => (
@@ -20,6 +20,21 @@ const DetailRow = ({ icon, label, children }: { icon: React.ReactNode, label: st
     <Separator />
   </>
 );
+
+const StatusRow = ({ icon, label, status }: { icon: React.ReactNode, label: string, status: boolean }) => (
+    <>
+      <div className="flex items-center justify-between py-3">
+        <span className="text-muted-foreground flex items-center gap-2 text-sm">
+          {icon}
+          {label}
+        </span>
+        <Badge variant={status ? "default" : "secondary"}>
+          {status ? "Synced" : "Pending"}
+        </Badge>
+      </div>
+      <Separator />
+    </>
+  );
 
 export default function FileDetailsPage({ params }: { params: { id: string } }) {
   const file = data.find((f) => f.id === params.id);
@@ -63,7 +78,7 @@ export default function FileDetailsPage({ params }: { params: { id: string } }) 
             </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle>File Details</CardTitle>
@@ -86,6 +101,20 @@ export default function FileDetailsPage({ params }: { params: { id: string } }) 
                      <DetailRow icon={<Calendar className="h-4 w-4"/>} label="Next Compression">
                          {file.nextCompression === "N/A" ? "N/A" : new Date(file.nextCompression).toLocaleDateString()}
                     </DetailRow>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Backup & Sync Status</CardTitle>
+                    <CardDescription>
+                        Current status across your storage locations.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-1">
+                    <Separator className="mb-2"/>
+                    <StatusRow icon={<HardDrive className="h-4 w-4" />} label="NAS Backup" status={file.nasBackup} />
+                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="Google Photos" status={file.googlePhotosBackup} />
+                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="iCloud" status={file.icloudUpload} />
                 </CardContent>
             </Card>
         </div>
