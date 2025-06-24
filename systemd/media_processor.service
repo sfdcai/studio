@@ -4,10 +4,8 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-# The working directory is the app's root, so the script can find its config.
+# The WorkingDirectory should be the root of your cloned repository,
+# which the deploy_ui.sh script places at /root/mediaflow
 WorkingDirectory=/root/mediaflow
-# The user must have permissions to execute this script.
+# The ExecStart should be the full path to your script inside that directory
 ExecStart=/root/mediaflow/run_all.sh
-
-[Install]
-WantedBy=multi-user.target

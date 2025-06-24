@@ -196,13 +196,14 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                 </div>
                  <div className="grid md:grid-cols-2 gap-6 pt-4">
                      <div className="space-y-4">
-                        <h4 className="font-semibold">JPEG Quality</h4>
+                        <h4 className="font-semibold">JPEG Quality (1-100)</h4>
+                         <p className="text-xs text-muted-foreground">Quality for images older than 1 year. Higher is better.</p>
                          <div className="space-y-2">
-                            <Label htmlFor="jpgQualityMedium">Medium Quality (1-100)</Label>
+                            <Label htmlFor="jpgQualityMedium">Medium Quality (1-5 Years)</Label>
                             <Input id="jpgQualityMedium" type="number" value={settings.jpgQualityMedium} onChange={handleInputChange}/>
                          </div>
                           <div className="space-y-2">
-                            <Label htmlFor="jpgQualityLow">Low Quality (1-100)</Label>
+                            <Label htmlFor="jpgQualityLow">Low Quality (5+ Years)</Label>
                             <Input id="jpgQualityLow" type="number" value={settings.jpgQualityLow} onChange={handleInputChange}/>
                          </div>
                      </div>
@@ -210,12 +211,16 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                          <h4 className="font-semibold">Video Quality (CRF)</h4>
                          <p className="text-xs text-muted-foreground">H.265 Constant Rate Factor. Lower is better quality. 18-28 is a sane range.</p>
                          <div className="space-y-2">
-                            <Label htmlFor="vidCRF1080p">1080p CRF</Label>
+                            <Label htmlFor="vidCRF1080p">1080p CRF (0-1 Year)</Label>
                             <Input id="vidCRF1080p" type="number" value={settings.vidCRF1080p} onChange={handleInputChange}/>
                          </div>
                           <div className="space-y-2">
-                            <Label htmlFor="vidCRF720p">720p CRF</Label>
+                            <Label htmlFor="vidCRF720p">720p CRF (1-5 Years)</Label>
                             <Input id="vidCRF720p" type="number" value={settings.vidCRF720p} onChange={handleInputChange}/>
+                         </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="vidCRF640p">640p CRF (5+ Years)</Label>
+                            <Input id="vidCRF640p" type="number" value={settings.vidCRF640p} onChange={handleInputChange}/>
                          </div>
                      </div>
                  </div>

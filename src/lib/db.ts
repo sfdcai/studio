@@ -2,21 +2,21 @@
 
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
-import path from 'path';
+import { getSettings } from './settings';
 import fs from 'fs/promises';
+import path from 'path';
 
-const DB_FILE = 'media_library.sqlite';
-const dbPath = path.join(process.cwd(), DB_FILE);
 let db: Database<sqlite3.Database, sqlite3.Statement> | null = null;
 
 export async function getDb() {
   if (db) return db;
 
-  try {
-    await fs.access(path.dirname(dbPath));
-  } catch {
-    await fs.mkdir(path.dirname(dbPath), { recursive: true });
-  }
+  const settings = await getSettings();
+  const dbPath = settings.dbPath;
+
+  // Ensure the directory for the database file exists before trying to open it.
+  const dir = path.dirname(dbPath);
+  await fs.mkdir(dir, { recursive: true });
 
   db = await open({
     filename: dbPath,
@@ -44,7 +44,7 @@ async function initDb(db: Database) {
       nas_backup_status INTEGER DEFAULT 0,
       gphotos_backup_status INTEGER DEFAULT 0,
       icloud_upload_status INTEGER DEFAULT 0,
-      staging_path TEXT NOT NULL
+      staging_path TEXT
     );
   `);
 
@@ -57,4 +57,6 @@ async function initDb(db: Database) {
 
   // Initialize stats if they don't exist
   await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('duplicates_found', 0)");
+  await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('storage_saved_mb', 0)");
+  await db.run("INSERT OR IGNORE INTO stats (key, value) VALUES ('processing_errors', 0)");
 }

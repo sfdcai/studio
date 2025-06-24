@@ -23,6 +23,7 @@ export type Settings = {
   jpgQualityLow: number;
   vidCRF1080p: number;
   vidCRF720p: number;
+  vidCRF640p: number;
 };
 
 const settingsFilePath = path.join(process.cwd(), 'settings.json');
@@ -35,7 +36,7 @@ const defaultSettings: Settings = {
   archiveDir: "/data/nas/archive",
   processedDir: "/data/nas/processed",
   logDir: "/data/nas/logs",
-  dbPath: "/data/nas/media_library.sqlite",
+  dbPath: "media_library.sqlite",
   rcloneRemote: "gdrive",
   drivePath: "My Media/Optimized",
   icloudUser: "your_apple_id@email.com",
@@ -44,6 +45,7 @@ const defaultSettings: Settings = {
   jpgQualityLow: 75,
   vidCRF1080p: 24,
   vidCRF720p: 26,
+  vidCRF640p: 28,
 };
 
 async function ensureSettingsFileExists() {
@@ -104,6 +106,7 @@ JPG_QUAL_LOW="${settings.jpgQualityLow}"
 # --- Video Compression Quality (CRF for H.265) ---
 VID_CRF_1080p="${settings.vidCRF1080p}"
 VID_CRF_720p="${settings.vidCRF720p}"
+VID_CRF_640p="${settings.vidCRF640p}"
 `.trim();
 
     try {

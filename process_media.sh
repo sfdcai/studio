@@ -19,12 +19,11 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # --- Load Configuration File ---
-if [ -f "$CONFIG_FILE_PATH" ]; {
+if [ -f "$CONFIG_FILE_PATH" ]; then
     source "$CONFIG_FILE_PATH"
-} else {
+else
     echo "FATAL: Config file not found at $CONFIG_FILE_PATH. Exiting."
     exit 1
-}
 fi
 
 # --- Log Function ---
@@ -35,9 +34,15 @@ log() {
 log "--- Starting media processing run with limit: $PROCESS_LIMIT ---"
 processed_count=0
 
+# Ensure directories exist
+mkdir -p "$STAGING_DIR" "$ARCHIVE_DIR" "$PROCESSED_DIR" "$LOG_DIR"
+# Create parent directory for database if it doesn't exist
+mkdir -p "$(dirname "$DB_PATH")"
+
+
 # --- Main Processing Loop ---
 # Find all media files in the staging directory, limit the number processed per run.
-find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.heic" -o -iname "*.mp4" -o -iname "*.mov" \) | head -n "$PROCESS_LIMIT" | while read -r file_path; do
+find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.heic" -o -iname "*.mp4" -o -iname "*.mov" \) -print0 | head -z -n "$PROCESS_LIMIT" | while IFS= read -r -d $'\0' file_path; do
 
     log "--- Processing file: $file_path ---"
     
@@ -59,8 +64,9 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     original_size_mb=$(du -m "$file_path" | cut -f1)
     
     extension="${file_path##*.}"
+    lower_ext=$(echo "$extension" | tr '[:upper:]' '[:lower:]')
     file_type="Image"
-    if [[ "$extension" == "mov" || "$extension" == "mp4" ]]; then
+    if [[ "$lower_ext" == "mov" || "$lower_ext" == "mp4" ]]; then
         file_type="Video"
     fi
 
@@ -71,52 +77,96 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     # 3. Mark as processing
     sqlite3 "$DB_PATH" "UPDATE files SET status = 'processing' WHERE id = $file_id;"
     
-    # 4. Simulate processing (compression, cloud syncs etc.)
-    # In a real script, replace this section with your actual ffmpeg/rclone commands
-    log "Simulating compression and cloud sync for file ID $file_id..."
-    sleep 1 # Simulate work
+    # 4. Tiered Compression Logic
+    capture_year=$(echo "$created_iso" | cut -d'-' -f1)
+    current_year=$(date +'%Y')
+    age=$((current_year - capture_year))
     
-    # Check if simulation should fail (e.g., 5% chance)
-    if [ $(($RANDOM % 20)) -eq 0 ]; then
-        log "ERROR: Simulated processing FAILED for file ID $file_id."
-        sqlite3 "$DB_PATH" "UPDATE files SET status = 'failed' WHERE id = $file_id;"
-        continue
+    output_path=""
+    processing_command=""
+
+    # Determine output path and standardize extension
+    if [[ "$file_type" == "Image" ]]; then
+        output_path="${PROCESSED_DIR}/$(basename "$file_name" ."$extension").jpg"
+    else # Video
+        output_path="${PROCESSED_DIR}/$(basename "$file_name" ."$extension").mp4"
     fi
-    
-    # 5. On success, update DB with final details
-    compressed_size=$(echo "$original_size_mb * 0.6" | bc)
-    now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S")
-    next_year_iso=$(date -d "+1 year" -u +"%Y-%m-%dT%H:%M:%S")
-    
-    log "SUCCESS: Marking file ID $file_id as successfully processed."
-    sqlite3 "$DB_PATH" "
-        UPDATE files 
-        SET 
-            status = 'success',
-            compressed_size_mb = $compressed_size,
-            last_compressed_date = '$now_iso',
-            next_compression_date = '$next_year_iso',
-            nas_backup_status = 1,
-            gphotos_backup_status = 1,
-            icloud_upload_status = 1
-        WHERE id = $file_id;
-    "
-    
-    # 6. Archive the processed file from staging
-    mkdir -p "$ARCHIVE_DIR"
-    mv "$file_path" "$ARCHIVE_DIR/"
+
+    if [[ "$file_type" == "Image" ]]; then
+        log "Image processing. Age: $age years."
+        if [ "$age" -le 1 ]; then # 0-1 years old
+            processing_command="convert \"$file_path\" -quality 95 \"$output_path\""
+        elif [ "$age" -le 5 ]; then # 2-5 years old
+            processing_command="convert \"$file_path\" -quality \"$JPG_QUAL_MED\" \"$output_path\""
+        else # 5+ years old
+            processing_command="convert \"$file_path\" -quality \"$JPG_QUAL_LOW\" \"$output_path\""
+        fi
+    elif [[ "$file_type" == "Video" ]]; then
+        log "Video processing. Age: $age years."
+        if [ "$age" -le 1 ]; then # 0-1 years old
+            processing_command="ffmpeg -i \"$file_path\" -y -c:v libx265 -crf \"$VID_CRF_1080p\" -preset medium -vf \"scale='min(1920,iw)':-2\" -c:a aac -b:a 128k \"$output_path\""
+        elif [ "$age" -le 5 ]; then # 2-5 years old
+            processing_command="ffmpeg -i \"$file_path\" -y -c:v libx265 -crf \"$VID_CRF_720p\" -preset medium -vf \"scale='min(1280,iw)':-2\" -c:a aac -b:a 128k \"$output_path\""
+        else # 5+ years old
+            processing_command="ffmpeg -i \"$file_path\" -y -c:v libx265 -crf \"$VID_CRF_640p\" -preset medium -vf \"scale='min(960,iw)':-2\" -c:a aac -b:a 96k \"$output_path\""
+        fi
+    fi
+
+    # Execute processing
+    log "Executing: $processing_command"
+    if eval "$processing_command"; then
+        log "SUCCESS: Processing complete for $file_name."
+        
+        # Get compressed size
+        compressed_size_mb=$(du -m "$output_path" | cut -f1)
+        now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S")
+
+        # Update DB for success
+        sqlite3 "$DB_PATH" "
+            UPDATE files 
+            SET 
+                status = 'success',
+                compressed_size_mb = $compressed_size_mb,
+                last_compressed_date = '$now_iso',
+                nas_backup_status = 1
+            WHERE id = $file_id;
+        "
+        
+        storage_saved=$((original_size_mb - compressed_size_mb))
+        sqlite3 "$DB_PATH" "UPDATE stats SET value = value + $storage_saved WHERE key = 'storage_saved_mb';"
+
+        # Archive the original file from staging
+        mkdir -p "$ARCHIVE_DIR"
+        mv "$file_path" "$ARCHIVE_DIR/"
+        
+    else
+        log "ERROR: Processing FAILED for $file_name."
+        sqlite3 "$DB_PATH" "UPDATE files SET status = 'failed' WHERE id = $file_id;"
+        sqlite3 "$DB_PATH" "UPDATE stats SET value = value + 1 WHERE key = 'processing_errors';"
+        continue # Skip to next file
+    fi
 
     processed_count=$((processed_count + 1))
 done
 
-# --- Upload Step (Optional) ---
+# --- Upload Step ---
 log "--- Starting cloud upload of processed files ---"
 if [ -n "$(ls -A $PROCESSED_DIR 2>/dev/null)" ]; then
-    # In a real script, you'd populate PROCESSED_DIR with compressed files
-    # rclone copy "$PROCESSED_DIR" "$RCLONE_REMOTE:$RCLONE_DEST_PATH" --log-file="$LOG_DIR/rclone_$(date +%Y-%m-%d).log" -vv
-    log "Simulating rclone upload. In a real script, files in $PROCESSED_DIR would be uploaded."
+    rclone copy "$PROCESSED_DIR" "$RCLONE_REMOTE:$RCLONE_DEST_PATH" --log-file="$LOG_DIR/rclone_$(date +%Y-%m-%d).log" -vv
+    if [ $? -eq 0 ]; then
+        log "Rclone upload successful. Cleaning up processed files directory."
+        # Find all files uploaded and update their DB status
+        find "$PROCESSED_DIR" -type f -print0 | while IFS= read -r -d $'\0' uploaded_file; do
+            uploaded_file_name=$(basename "$uploaded_file" .jpg) # remove standard extension
+            uploaded_file_name="${uploaded_file_name}.*" # match original extension
+            sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1, icloud_upload_status = 1 WHERE file_name LIKE '${uploaded_file_name//\'/''}%';"
+        done
+        rm -rf "$PROCESSED_DIR"/*
+    else
+        log "ERROR: Rclone upload failed. Processed files are kept for next run."
+    fi
 else
     log "No new files to upload."
 fi
 
-log "--- Media processing run finished ---"
+log "--- Media processing run finished. Processed $processed_count files. ---"
