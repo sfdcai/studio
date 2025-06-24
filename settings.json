@@ -1,0 +1,16 @@
+{
+  "appName": "MediaFlow",
+  "isDarkMode": false,
+  "nasPath": "/mnt/nas/media/incoming",
+  "drivePath": "/Apps/MediaFlow/processed",
+  "compression": 60,
+  "year1Compression": "1080p",
+  "year2Compression": "720p",
+  "year5Compression": "640p",
+  "preserveExif": true,
+  "icloudSync": false,
+  "icloudUser": "",
+  "icloudPass": "",
+  "dailyLimit": 1000,
+  "deleteYesterday": false
+}
