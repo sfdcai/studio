@@ -19,10 +19,11 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # --- Load Configuration File ---
-if [ -f "$CONFIG_FILE_PATH" ]; then
+if [ -f "$CONFIG_FILE_PATH" ];
+then
     source "$CONFIG_FILE_PATH"
 else
-    echo "FATAL: Config file not found at $CONFIG_FILE_PATH. Exiting."
+    echo "FATAL: Config file not found at $CONFIG_FILE_PATH. This script cannot run without it. Exiting."
     exit 1
 fi
 
@@ -52,12 +53,16 @@ db_log "INFO" "--- Starting media processing run with limit: $PROCESS_LIMIT ---"
 # --- Validate Configuration ---
 db_log "INFO" "Validating configuration variables..."
 CONFIG_VARS=("STAGING_DIR" "ARCHIVE_DIR" "PROCESSED_DIR" "ERROR_DIR" "LOG_DIR" "DB_PATH")
+all_vars_ok=true
 for var in "${CONFIG_VARS[@]}"; do
     if [ -z "${!var}" ]; then
         db_log "ERROR" "FATAL: Configuration variable '$var' is not set. Please check config.conf. Exiting."
-        exit 1
+        all_vars_ok=false
     fi
 done
+if [ "$all_vars_ok" = false ]; then
+    exit 1
+fi
 db_log "INFO" "Configuration validated successfully."
 
 # --- Ensure Directories Exist ---
@@ -193,7 +198,6 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
 
             # Archive the original file from staging
             db_log "INFO" "Archiving original file to $ARCHIVE_DIR..." "$file_id"
-            mkdir -p "$ARCHIVE_DIR"
             mv "$file_path" "$archive_file_path"
             db_log "INFO" "Archived original to $archive_file_path." "$file_id"
             
@@ -205,7 +209,6 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
             escaped_error_output="${error_output//\'/\'\'}"
 
             db_log "INFO" "Moving failed file to error directory: $error_file_path" "$file_id"
-            mkdir -p "$ERROR_DIR"
             mv "$file_path" "$error_file_path"
             
             db_log "ERROR" "Updating database to failed status." "$file_id"
@@ -233,7 +236,6 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
         
         # Archive the original file from staging
         db_log "INFO" "Archiving original file (no compression)..." "$file_id"
-        mkdir -p "$ARCHIVE_DIR"
         mv "$file_path" "$archive_file_path"
         db_log "INFO" "Archived original to $archive_file_path." "$file_id"
     fi
@@ -255,6 +257,7 @@ if [ "$UPLOAD_ENABLED" = "true" ]; then
             
             find "$PROCESSED_DIR" -type f -print0 | while IFS= read -r -d $'\0' uploaded_file; do
                 escaped_uploaded_file="${uploaded_file//\'/\'\'}"
+                # We need to find the file in the DB based on the processed_path, which we just uploaded
                 target_file_id=$(sqlite3 "$DB_PATH" "SELECT id FROM files WHERE processed_path = '$escaped_uploaded_file';")
                 if [ -n "$target_file_id" ]; then
                      sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1 WHERE id = $target_file_id;"
@@ -263,6 +266,8 @@ if [ "$UPLOAD_ENABLED" = "true" ]; then
                      db_log "WARN" "Could not find matching file in DB for uploaded file: $uploaded_file"
                 fi
             done
+            
+            db_log "INFO" "Cleaning up processed files directory..."
             rm -rf "$PROCESSED_DIR"/*
             db_log "INFO" "Processed files directory cleaned up."
         else
