@@ -19,6 +19,7 @@ function mapRowToMediaFile(row: any): MediaFile {
         stagingPath: row.staging_path,
         archivePath: row.archive_path,
         processedPath: row.processed_path,
+        errorLog: row.error_log,
     };
 }
 
@@ -26,6 +27,12 @@ function mapRowToMediaFile(row: any): MediaFile {
 export async function getMediaFiles(): Promise<MediaFile[]> {
     const db = await getDb();
     const rows = await db.all('SELECT * FROM files ORDER BY created_date DESC');
+    return rows.map(mapRowToMediaFile);
+}
+
+export async function getFailedMediaFiles(): Promise<MediaFile[]> {
+    const db = await getDb();
+    const rows = await db.all("SELECT * FROM files WHERE status = 'failed' ORDER BY created_date DESC");
     return rows.map(mapRowToMediaFile);
 }
 
@@ -79,16 +86,20 @@ export async function getProcessingHistory(): Promise<ProcessingHistoryPoint[]> 
     const sevenDaysAgoISO = sevenDaysAgo.toISOString().split('T')[0] + 'T00:00:00Z';
 
     const rows: { day: string, processed: number, failed: number }[] = await db.all(`
-        WITH daily_counts AS (
+        WITH daily_logs AS (
             SELECT
-                date(timestamp) AS day,
-                SUM(CASE WHEN message LIKE 'SUCCESS: Processing complete%' THEN 1 ELSE 0 END) AS processed,
-                SUM(CASE WHEN level = 'ERROR' AND message LIKE 'ERROR: Processing FAILED%' THEN 1 ELSE 0 END) AS failed
-            FROM logs
-            WHERE timestamp >= ?
-            GROUP BY day
+                date(last_compressed_date) AS day,
+                status
+            FROM files
+            WHERE last_compressed_date >= ?
         )
-        SELECT * FROM daily_counts ORDER BY day ASC;
+        SELECT
+            day,
+            SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as processed,
+            SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed
+        FROM daily_logs
+        GROUP BY day
+        ORDER BY day ASC;
     `, sevenDaysAgoISO);
     
     const resultsMap = new Map(rows.map(row => [row.day, row]));

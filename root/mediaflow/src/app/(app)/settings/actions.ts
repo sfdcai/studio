@@ -14,6 +14,7 @@ const defaultSettings: Settings = {
   stagingDir: "/data/nas/staging",
   archiveDir: "/data/nas/archive",
   processedDir: "/data/nas/processed",
+  errorDir: "/data/nas/error",
   logDir: "/data/nas/logs",
   dbPath: "media_library.sqlite",
   rcloneRemote: "gdrive",
@@ -78,6 +79,7 @@ APPLE_ID="${settings.icloudUser}"
 STAGING_DIR="${settings.stagingDir}"
 ARCHIVE_DIR="${settings.archiveDir}"
 PROCESSED_DIR="${settings.processedDir}"
+ERROR_DIR="${settings.errorDir}"
 LOG_DIR="${settings.logDir}"
 DB_PATH="${absoluteDbPath}"
 

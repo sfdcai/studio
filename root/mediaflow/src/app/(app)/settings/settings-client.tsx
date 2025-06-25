@@ -130,6 +130,10 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                       <Label htmlFor="logDir">Log Directory</Label>
                       <Input id="logDir" value={settings.logDir} onChange={handleInputChange} placeholder="/data/nas/logs"/>
                   </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="errorDir">Error Directory</Label>
+                      <Input id="errorDir" value={settings.errorDir} onChange={handleInputChange} placeholder="/data/nas/error"/>
+                  </div>
                   <div className="space-y-2">
                       <Label htmlFor="dbPath">Database File Path</Label>
                       <Input id="dbPath" value={settings.dbPath} onChange={handleInputChange} placeholder="media_library.sqlite"/>

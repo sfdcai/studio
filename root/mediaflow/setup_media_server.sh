@@ -14,10 +14,22 @@ apt-get install -y \
     sqlite3 \
     git \
     python3-pip \
-    bc
+    bc \
+    npm
 
 echo "--- Installing iCloudPD via pip... ---"
 pip install --break-system-packages icloudpd
+
+echo "--- Installing PM2 globally via npm... ---"
+if ! command -v pm2 &> /dev/null; then
+    npm install -g pm2
+    export PATH=$(npm prefix -g)/bin:$PATH
+    pm2 startup
+fi
+
+echo "--- Starting rclone remote control daemon with web GUI using PM2... ---"
+pm2 start "rclone rcd --rc-web-gui --rc-addr localhost:5572" --name rclone-web-gui
+pm2 save
 
 echo "--- Setup Complete! ---"
 echo "Next steps:"

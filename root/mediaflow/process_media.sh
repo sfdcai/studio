@@ -50,7 +50,7 @@ db_log "INFO" "Config loaded. COMPRESSION_ENABLED is set to: '$COMPRESSION_ENABL
 processed_count=0
 
 # Ensure directories exist
-mkdir -p "$STAGING_DIR" "$ARCHIVE_DIR" "$PROCESSED_DIR" "$LOG_DIR"
+mkdir -p "$STAGING_DIR" "$ARCHIVE_DIR" "$PROCESSED_DIR" "$LOG_DIR" "$ERROR_DIR"
 # Create parent directory for database if it doesn't exist
 mkdir -p "$(dirname "$DB_PATH")"
 
@@ -87,7 +87,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     fi
 
     db_log "INFO" "NEW FILE: Inserting $file_name into database as pending."
-    sqlite3 "$DB_PATH" "INSERT INTO files (file_hash, file_name, file_type, original_size_mb, status, camera, created_date, staging_path, archive_path, processed_path) VALUES ('$file_hash', '$file_name', '$file_type', $original_size_mb, 'pending', '$camera_model', '$created_iso', '$file_path', '', '');"
+    sqlite3 "$DB_PATH" "INSERT INTO files (file_hash, file_name, file_type, original_size_mb, status, camera, created_date, staging_path, archive_path, processed_path, error_log) VALUES ('$file_hash', '$file_name', '$file_type', $original_size_mb, 'pending', '$camera_model', '$created_iso', '$file_path', '', '', NULL);"
     file_id=$(sqlite3 "$DB_PATH" "SELECT last_insert_rowid();")
     
     # 3. Mark as processing
@@ -175,8 +175,13 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
             db_log "INFO" "Archived original to $archive_file_path" "$file_id"
             
         else
-            db_log "ERROR" "ERROR: Processing command failed with exit code $exit_code. Output: $error_output" "$file_id"
-            sqlite3 "$DB_PATH" "UPDATE files SET status = 'failed' WHERE id = $file_id;"
+            escaped_error_output="${error_output//\'/\'\'}"
+            db_log "ERROR" "ERROR: Processing command failed with exit code $exit_code. See error_log field for details." "$file_id"
+            
+            error_file_path="$ERROR_DIR/$(basename "$file_path")"
+            mv "$file_path" "$error_file_path"
+            
+            sqlite3 "$DB_PATH" "UPDATE files SET status = 'failed', error_log = '$escaped_error_output', archive_path = '$error_file_path' WHERE id = $file_id;"
             sqlite3 "$DB_PATH" "UPDATE stats SET value = value + 1 WHERE key = 'processing_errors';"
             continue # Skip to next file
         fi

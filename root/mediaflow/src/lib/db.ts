@@ -51,7 +51,8 @@ async function initDb(db: Database) {
       icloud_upload_status INTEGER DEFAULT 0,
       staging_path TEXT,
       archive_path TEXT,
-      processed_path TEXT
+      processed_path TEXT,
+      error_log TEXT
     );
   `);
 
