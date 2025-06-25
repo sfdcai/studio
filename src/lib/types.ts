@@ -15,11 +15,6 @@ export type Settings = {
   vidCRF1080p: number;
   vidCRF720p: number;
   vidCRF640p: number;
-  // AI Settings
-  googleAiApiKey: string;
-  aiAllowMetadata: boolean;
-  aiAllowStats: boolean;
-  aiAllowSettings: boolean;
   // Feature Toggles
   compressionEnabled: boolean;
 };

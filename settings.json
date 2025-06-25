@@ -14,9 +14,5 @@
   "vidCRF1080p": 24,
   "vidCRF720p": 26,
   "vidCRF640p": 28,
-  "googleAiApiKey": "",
-  "aiAllowMetadata": false,
-  "aiAllowStats": false,
-  "aiAllowSettings": false,
   "compressionEnabled": true
 }

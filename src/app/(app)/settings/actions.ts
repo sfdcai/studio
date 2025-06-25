@@ -23,10 +23,6 @@ const defaultSettings: Settings = {
   vidCRF1080p: 24,
   vidCRF720p: 26,
   vidCRF640p: 28,
-  googleAiApiKey: "",
-  aiAllowMetadata: false,
-  aiAllowStats: false,
-  aiAllowSettings: false,
   compressionEnabled: true,
 };
 
@@ -100,33 +96,16 @@ VID_CRF_640p="${settings.vidCRF640p}"
 }
 
 
-// Action for UI/AI settings that do NOT affect the backend config.conf
+// Action for UI settings that do NOT affect the backend config.conf
 export async function handleSaveAppSettings(newSettings: Partial<Settings>): Promise<{success: boolean, message?: string}> {
   try {
     const currentSettings = await getSettings();
     const updatedSettings = { ...currentSettings, ...newSettings };
     await saveSettings(updatedSettings);
 
-    let message = "Settings saved successfully.";
-
-    if (newSettings.googleAiApiKey) {
-        try {
-            const envPath = path.join(process.cwd(), '.env');
-            const currentEnv = await fs.readFile(envPath, 'utf-8').catch(() => '');
-            if (!currentEnv.includes(`GOOGLE_API_KEY=${newSettings.googleAiApiKey}`)) {
-               await fs.writeFile(envPath, `GOOGLE_API_KEY=${newSettings.googleAiApiKey}\n`);
-               message += " API Key updated. A server restart is required for it to take effect.";
-            }
-        } catch (err) {
-            console.error('Failed to write to .env file', err);
-            return { success: false, message: 'Settings saved, but failed to write API key to .env file.' };
-        }
-    }
-    
     revalidatePath('/settings');
-    revalidatePath('/summarize');
     
-    return { success: true, message };
+    return { success: true, message: "Settings saved successfully." };
   } catch (error) {
     console.error("Failed to save app settings:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";

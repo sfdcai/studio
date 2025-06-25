@@ -19,7 +19,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { KeyRound, Files, BarChart3, Settings as SettingsIcon, Zap } from "lucide-react"
+import { Zap } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Settings } from "@/lib/types"
 import { Separator } from "@/components/ui/separator"
@@ -69,10 +69,9 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
 
   return (
     <Tabs defaultValue="storage" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="storage">Storage & Backend</TabsTrigger>
-        <TabsTrigger value="ai">AI</TabsTrigger>
       </TabsList>
       <TabsContent value="general">
         <Card>
@@ -202,61 +201,6 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
           </CardContent>
           <CardFooter>
             <Button onClick={onSaveBackend}>Save Storage & Backend Settings</Button>
-          </CardFooter>
-        </Card>
-      </TabsContent>
-       <TabsContent value="ai">
-        <Card>
-          <CardHeader>
-            <CardTitle>AI System Analysis</CardTitle>
-            <CardDescription>
-              Configure the AI assistant to analyze your system's health and performance.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-                <Label htmlFor="googleAiApiKey">Google AI API Key</Label>
-                <div className="flex items-center gap-2">
-                    <KeyRound className="h-5 w-5 text-muted-foreground"/>
-                    <Input id="googleAiApiKey" type="password" placeholder="Enter your Google AI API Key" value={settings.googleAiApiKey} onChange={handleInputChange}/>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                    Your API key is stored in the root .env file. A server restart is required for changes to take effect.
-                </p>
-            </div>
-            <Separator />
-            <div className="space-y-4">
-                <h3 className="text-lg font-medium">AI Data Permissions</h3>
-                <p className="text-sm text-muted-foreground">
-                    Choose what data the AI is allowed to analyze to provide insights.
-                </p>
-                <div className="space-y-3 pt-2">
-                    <div className="flex items-center space-x-3">
-                        <Switch id="aiAllowMetadata" checked={settings.aiAllowMetadata} onCheckedChange={handleSwitchChange('aiAllowMetadata')} />
-                        <Label htmlFor="aiAllowMetadata" className="flex items-center gap-2">
-                            <Files className="h-4 w-4"/>
-                            <span>Analyze File Metadata (names, sizes, dates, etc.)</span>
-                        </Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                        <Switch id="aiAllowStats" checked={settings.aiAllowStats} onCheckedChange={handleSwitchChange('aiAllowStats')} />
-                         <Label htmlFor="aiAllowStats" className="flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4"/>
-                            <span>Analyze Processing Statistics (errors, duplicates, space saved)</span>
-                        </Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                        <Switch id="aiAllowSettings" checked={settings.aiAllowSettings} onCheckedChange={handleSwitchChange('aiAllowSettings')} />
-                         <Label htmlFor="aiAllowSettings" className="flex items-center gap-2">
-                            <SettingsIcon className="h-4 w-4"/>
-                            <span>Analyze System Configuration (paths, compression levels)</span>
-                        </Label>
-                    </div>
-                </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={onSaveApp}>Save AI Settings</Button>
           </CardFooter>
         </Card>
       </TabsContent>
