@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { PlayCircle, Loader2, Terminal, DownloadCloud } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { runManualSync, runICloudDownload } from "@/app/(app)/dashboard/actions";
+import { runLocalProcessing, runICloudDownload } from "@/app/(app)/dashboard/actions";
 import { Separator } from "@/components/ui/separator";
 
 export function JobControlCard() {
@@ -26,7 +26,7 @@ export function JobControlCard() {
         if (result.ok) {
             toast({
                 title: "Download Finished",
-                description: result.message,
+                description: result.error ? `${result.message} ${result.error}` : result.message,
             });
         } else {
             toast({
@@ -36,21 +36,21 @@ export function JobControlCard() {
             });
         }
         setIsDownloading(false);
-    }
+    };
 
     const handleRunProcessing = async () => {
         setIsProcessing(true);
         toast({
-            title: "Manual Processing Started",
+            title: "Local Processing Started",
             description: "The backend job is running. This may take a while.",
         });
 
-        const result = await runManualSync();
+        const result = await runLocalProcessing();
 
         if (result.ok) {
             toast({
                 title: "Processing Finished",
-                description: result.message,
+                description: result.error ? `${result.message} ${result.error}` : result.message,
             });
         } else {
             toast({
@@ -60,7 +60,7 @@ export function JobControlCard() {
             });
         }
         setIsProcessing(false);
-    }
+    };
 
     return (
         <Card>
@@ -111,5 +111,5 @@ export function JobControlCard() {
                  <code className="bg-muted p-2 rounded-md text-xs w-full"><Terminal className="inline h-3 w-3 mr-1"/>sudo systemctl status media_processor.timer</code>
             </CardFooter>
         </Card>
-    )
+    );
 }

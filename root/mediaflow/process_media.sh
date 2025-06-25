@@ -233,6 +233,8 @@ if [ "$UPLOAD_ENABLED" = "true" ]; then
                 if [ -n "$target_file_id" ]; then
                      sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1 WHERE id = $target_file_id;"
                      db_log "INFO" "Updated cloud backup status for file ID $target_file_id" "$target_file_id"
+                else
+                     db_log "WARN" "Could not find matching file in DB for uploaded file: $uploaded_file"
                 fi
             done
             rm -rf "$PROCESSED_DIR"/*

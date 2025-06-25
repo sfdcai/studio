@@ -27,7 +27,7 @@ export async function getSystemStatus(): Promise<Prerequisite[]> {
     return Promise.all(statusPromises);
 }
 
-export async function runManualSync(): Promise<{ ok: boolean; message: string; output?: string; error?: string; }> {
+export async function runLocalProcessing(): Promise<{ ok: boolean; message: string; output?: string; error?: string; }> {
     // This action now ONLY runs local processing.
     const scriptPath = path.join(process.cwd(), 'run_all.sh');
     try {
@@ -54,7 +54,8 @@ export async function runICloudDownload(): Promise<{ ok: boolean; message: strin
         const { stdout, stderr } = await execAsync(`/bin/bash ${scriptPath}`, { cwd: process.cwd() });
         if (stderr) {
              // Treat stderr as a potential error, as icloudpd often writes important info there
-            return { ok: false, message: 'iCloud download script finished with errors. Check output.', output: stdout, error: stderr };
+             // Don't treat it as a hard failure, but return a warning.
+            return { ok: true, message: 'iCloud download script finished with warnings. Check output.', output: stdout, error: stderr };
         }
         return { ok: true, message: 'iCloud download finished successfully!', output: stdout };
     } catch (e: any) {
