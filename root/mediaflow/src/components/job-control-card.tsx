@@ -36,7 +36,7 @@ export function JobControlCard() {
             });
         }
         setIsDownloading(false);
-    };
+    }
 
     const handleRunProcessing = async () => {
         setIsProcessing(true);
@@ -60,7 +60,7 @@ export function JobControlCard() {
             });
         }
         setIsProcessing(false);
-    };
+    }
 
     return (
         <Card>
@@ -111,5 +111,5 @@ export function JobControlCard() {
                  <code className="bg-muted p-2 rounded-md text-xs w-full"><Terminal className="inline h-3 w-3 mr-1"/>sudo systemctl status media_processor.timer</code>
             </CardFooter>
         </Card>
-    );
+    )
 }
