@@ -1,3 +1,4 @@
+
 'use server';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -28,20 +29,20 @@ export async function getSystemStatus(): Promise<Prerequisite[]> {
 }
 
 export async function runManualSync(): Promise<{ ok: boolean; message: string; output?: string; error?: string; }> {
-    // The deploy script now copies run_all.sh into the app's root directory.
+    // This action now ONLY runs local processing.
     const scriptPath = path.join(process.cwd(), 'run_all.sh');
     try {
         // We use /bin/bash to ensure the script is executed with bash
         const { stdout, stderr } = await execAsync(`/bin/bash ${scriptPath}`, { cwd: process.cwd() });
         if (stderr) {
-            console.warn('Manual sync process produced stderr:', stderr);
+            console.warn('Manual processing produced stderr:', stderr);
             // Don't treat stderr as a failure, as some tools write warnings here.
             // Let the user see it in the logs.
             return { ok: true, message: 'Processing completed with warnings. Check the Logs page for details.', output: stdout, error: stderr };
         }
         return { ok: true, message: 'Processing completed successfully! Check the File Explorer for new media.', output: stdout };
     } catch (e: any) {
-        console.error('Failed to run manual sync:', e);
+        console.error('Failed to run local processing:', e);
         // The error object from exec contains stdout and stderr which can be very useful for debugging
         return { ok: false, message: `The processing script failed to execute. Looked for script at ${scriptPath}.`, error: e.stderr || e.stdout || e.message };
     }
