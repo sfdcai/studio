@@ -51,6 +51,7 @@ safe_restart() {
   echo "Copying essential backend scripts into app directory..."
   cp "$DEPLOY_SCRIPT_DIR/run_all.sh" .
   cp "$DEPLOY_SCRIPT_DIR/process_media.sh" .
+  cp "$DEPLOY_SCRIPT_DIR/run_icloud_sync.sh" .
 
   echo "Installing dependencies..."
   npm install
@@ -155,6 +156,7 @@ cd $APP_DIR
 echo -e "\n${GREEN}---> Copying backend scripts into application directory...${NC}"
 cp "$DEPLOY_SCRIPT_DIR/run_all.sh" .
 cp "$DEPLOY_SCRIPT_DIR/process_media.sh" .
+cp "$DEPLOY_SCRIPT_DIR/run_icloud_sync.sh" .
 
 # 5. INSTALL DEPENDENCIES & BUILD
 echo -e "\n${GREEN}---> 5. Installing npm dependencies...${NC}"

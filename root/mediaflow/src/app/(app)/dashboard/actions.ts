@@ -37,12 +37,28 @@ export async function runManualSync(): Promise<{ ok: boolean; message: string; o
             console.warn('Manual sync process produced stderr:', stderr);
             // Don't treat stderr as a failure, as some tools write warnings here.
             // Let the user see it in the logs.
-            return { ok: true, message: 'Sync completed with warnings. Check the Logs page for details.', output: stdout, error: stderr };
+            return { ok: true, message: 'Processing completed with warnings. Check the Logs page for details.', output: stdout, error: stderr };
         }
-        return { ok: true, message: 'Manual sync completed successfully! Check the File Explorer for new media.', output: stdout };
+        return { ok: true, message: 'Processing completed successfully! Check the File Explorer for new media.', output: stdout };
     } catch (e: any) {
         console.error('Failed to run manual sync:', e);
         // The error object from exec contains stdout and stderr which can be very useful for debugging
-        return { ok: false, message: `The sync script failed to execute. Looked for script at ${scriptPath}.`, error: e.stderr || e.stdout || e.message };
+        return { ok: false, message: `The processing script failed to execute. Looked for script at ${scriptPath}.`, error: e.stderr || e.stdout || e.message };
+    }
+}
+
+// Action to run the iCloud download script
+export async function runICloudDownload(): Promise<{ ok: boolean; message: string; output?: string; error?: string; }> {
+    const scriptPath = path.join(process.cwd(), 'run_icloud_sync.sh');
+    try {
+        const { stdout, stderr } = await execAsync(`/bin/bash ${scriptPath}`, { cwd: process.cwd() });
+        if (stderr) {
+             // Treat stderr as a potential error, as icloudpd often writes important info there
+            return { ok: false, message: 'iCloud download script finished with errors. Check output.', output: stdout, error: stderr };
+        }
+        return { ok: true, message: 'iCloud download finished successfully!', output: stdout };
+    } catch (e: any) {
+        console.error('Failed to run iCloud download:', e);
+        return { ok: false, message: `The iCloud download script failed. It may require re-authentication.`, error: e.stderr || e.stdout || e.message };
     }
 }
