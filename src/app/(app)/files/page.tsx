@@ -4,7 +4,13 @@ import { FileExplorerClient } from './files-client';
 export const revalidate = 0; // Disable caching
 
 export default async function FileExplorerPage() {
-  const data = await getMediaFiles();
+  let data = [];
+  try {
+      data = await getMediaFiles();
+  } catch (error) {
+    console.error("Failed to load file explorer data:", error);
+    // On error, render the client with an empty array.
+  }
 
   return (
     <div className="w-full p-4 md:p-8">

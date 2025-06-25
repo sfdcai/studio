@@ -138,13 +138,13 @@ export default async function FileDetailsPage({ params }: { params: { id: string
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[300px] w-full rounded-md border p-4 font-mono text-sm">
-                    {logs.map((log, index) => (
+                    {logs.length > 0 ? logs.map((log, index) => (
                       <div key={index} className="flex items-start gap-4 mb-2">
                         <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleTimeString()}</span>
                         <LogLevelBadge level={log.level} />
                         <span className="flex-1 break-all">{log.message}</span>
                       </div>
-                    ))}
+                    )) : <p className="text-muted-foreground">No logs found for this file.</p>}
                    </ScrollArea>
                 </CardContent>
             </Card>

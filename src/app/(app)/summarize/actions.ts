@@ -4,6 +4,7 @@ import { analyzeSystem } from "@/ai/flows/system-analysis";
 import type { SystemAnalysisOutput } from "@/ai/flows/system-analysis";
 import { getSettings } from "@/app/(app)/settings/actions";
 import { getMediaFiles, getStats } from "@/lib/data";
+import type { Settings } from "@/lib/types";
 
 export type State = {
     message?: string;
@@ -24,7 +25,7 @@ export async function handleAnalysis(
     }
 
     try {
-        const input: any = {};
+        const input: { files?: any[], stats?: any, settings?: Partial<Settings>} = {};
 
         if (settings.aiAllowMetadata) {
             input.files = await getMediaFiles();

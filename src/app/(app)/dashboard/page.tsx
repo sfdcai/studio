@@ -1,10 +1,11 @@
-import { getMediaFiles, getStats, getProcessingHistory } from '@/lib/data';
+import { getMediaFiles, getStats, getProcessingHistory, getFailedMediaFiles } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
 import { getSystemStatus } from './actions';
 
 export const revalidate = 0; // Disable caching
 
 const formatBytes = (mb: number) => {
+    if (!mb || mb < 0) return '0.0 MB';
     if (mb < 1024) return `${mb.toFixed(1)} MB`;
     const gb = mb / 1024;
     if (gb < 1024) return `${gb.toFixed(1)} GB`;
@@ -17,13 +18,15 @@ export default async function DashboardPage() {
   let stats: any = {};
   let processingHistoryData = [];
   let prerequisites = [];
+  let failedFiles = [];
 
   try {
-      [data, stats, processingHistoryData, prerequisites] = await Promise.all([
+      [data, stats, processingHistoryData, prerequisites, failedFiles] = await Promise.all([
         getMediaFiles(),
         getStats(),
         getProcessingHistory(),
         getSystemStatus(),
+        getFailedMediaFiles(),
       ]);
   } catch (error) {
       console.error("Failed to load dashboard data:", error);
@@ -38,6 +41,7 @@ export default async function DashboardPage() {
               filesByCategoryData={[]}
               processingHistoryData={[]}
               prerequisites={await getSystemStatus()}
+              failedFiles={[]}
           />
       );
   }
@@ -66,6 +70,7 @@ export default async function DashboardPage() {
         filesByCategoryData={filesByCategoryData}
         processingHistoryData={processingHistoryData}
         prerequisites={prerequisites}
+        failedFiles={failedFiles}
     />
   )
 }

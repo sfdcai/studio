@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
 
 const navItems = [
@@ -40,7 +41,7 @@ export default function Nav() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href}
+                isActive={pathname.startsWith(item.href)}
               >
                 <Link href={item.href}>
                   <item.icon className="h-5 w-5" />
@@ -51,6 +52,9 @@ export default function Nav() {
           ))}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter className="p-4 text-xs text-muted-foreground">
+          Version 1.0.0
+      </SidebarFooter>
     </Sidebar>
   )
 }

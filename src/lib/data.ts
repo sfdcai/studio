@@ -1,5 +1,5 @@
-import { notFound } from 'next/navigation';
 import { getDb } from './db';
+import { notFound } from 'next/navigation';
 import type { MediaFile, LogEntry, ProcessingHistoryPoint } from './types';
 
 function mapRowToMediaFile(row: any): MediaFile {
@@ -19,6 +19,7 @@ function mapRowToMediaFile(row: any): MediaFile {
         stagingPath: row.staging_path,
         archivePath: row.archive_path,
         processedPath: row.processed_path,
+        errorLog: row.error_log,
     };
 }
 
@@ -29,12 +30,18 @@ export async function getMediaFiles(): Promise<MediaFile[]> {
     return rows.map(mapRowToMediaFile);
 }
 
-export async function getMediaFile(id: string): Promise<MediaFile> {
+export async function getFailedMediaFiles(): Promise<MediaFile[]> {
+    const db = await getDb();
+    const rows = await db.all("SELECT * FROM files WHERE status = 'failed' ORDER BY created_date DESC");
+    return rows.map(mapRowToMediaFile);
+}
+
+export async function getMediaFile(id: string): Promise<MediaFile | null> {
     const db = await getDb();
     const row = await db.get('SELECT * FROM files WHERE id = ?', id);
     
     if (!row) {
-        notFound();
+        return null;
     }
     return mapRowToMediaFile(row);
 }
@@ -54,7 +61,6 @@ export async function getStats(): Promise<{ [key: string]: number }> {
     stats[row.key] = row.value;
   }
   
-  // Also get the total file count dynamically
   const totalFilesRow = await db.get("SELECT COUNT(*) as count FROM files");
   stats['total_files'] = totalFilesRow.count;
 
@@ -73,7 +79,6 @@ export async function getLogsForFile(fileId: string): Promise<LogEntry[]> {
     return rows as LogEntry[];
 }
 
-
 export async function getProcessingHistory(): Promise<ProcessingHistoryPoint[]> {
     const db = await getDb();
     const sevenDaysAgo = new Date();
@@ -81,22 +86,24 @@ export async function getProcessingHistory(): Promise<ProcessingHistoryPoint[]> 
     const sevenDaysAgoISO = sevenDaysAgo.toISOString().split('T')[0] + 'T00:00:00Z';
 
     const rows: { day: string, processed: number, failed: number }[] = await db.all(`
-        WITH daily_counts AS (
+        WITH daily_logs AS (
             SELECT
-                date(timestamp) AS day,
-                SUM(CASE WHEN message LIKE 'SUCCESS: Processing complete%' THEN 1 ELSE 0 END) AS processed,
-                SUM(CASE WHEN level = 'ERROR' AND message LIKE 'ERROR: Processing FAILED%' THEN 1 ELSE 0 END) AS failed
-            FROM logs
-            WHERE timestamp >= ?
-            GROUP BY day
+                date(last_compressed_date) AS day,
+                status
+            FROM files
+            WHERE last_compressed_date >= ?
         )
-        SELECT * FROM daily_counts ORDER BY day ASC;
+        SELECT
+            day,
+            SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as processed,
+            SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed
+        FROM daily_logs
+        GROUP BY day
+        ORDER BY day ASC;
     `, sevenDaysAgoISO);
     
-    // Create a map for quick lookups
     const resultsMap = new Map(rows.map(row => [row.day, row]));
 
-    // Generate date range for the last 7 days
     const history: ProcessingHistoryPoint[] = [];
     for (let i = 6; i >= 0; i--) {
         const date = new Date();

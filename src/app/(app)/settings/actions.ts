@@ -1,10 +1,9 @@
+'use server';
 
-"use server";
-
-import { revalidatePath } from "next/cache";
 import fs from 'fs/promises';
 import path from 'path';
-import type { Settings } from "@/lib/types";
+import { revalidatePath } from 'next/cache';
+import type { Settings } from '@/lib/types';
 
 const settingsFilePath = path.join(process.cwd(), 'settings.json');
 const configFilePath = path.join(process.cwd(), 'config.conf');
@@ -15,6 +14,7 @@ const defaultSettings: Settings = {
   stagingDir: "/data/nas/staging",
   archiveDir: "/data/nas/archive",
   processedDir: "/data/nas/processed",
+  errorDir: "/data/nas/error",
   logDir: "/data/nas/logs",
   dbPath: "media_library.sqlite",
   rcloneRemote: "gdrive",
@@ -48,7 +48,6 @@ export async function getSettings(): Promise<Settings> {
   try {
     const fileContent = await fs.readFile(settingsFilePath, 'utf-8');
     const loadedSettings = JSON.parse(fileContent);
-    // Merge with defaults to ensure all keys are present
     return { ...defaultSettings, ...loadedSettings };
   } catch (error) {
     console.error("Error reading settings file, returning defaults:", error);
@@ -63,7 +62,6 @@ export async function saveSettings(settings: Settings): Promise<void> {
 }
 
 export async function generateAndSaveConfig(settings: Settings): Promise<void> {
-    // The backend scripts need an absolute path to the database.
     const absoluteDbPath = path.isAbsolute(settings.dbPath)
       ? settings.dbPath
       : path.join(process.cwd(), settings.dbPath);
@@ -81,6 +79,7 @@ APPLE_ID="${settings.icloudUser}"
 STAGING_DIR="${settings.stagingDir}"
 ARCHIVE_DIR="${settings.archiveDir}"
 PROCESSED_DIR="${settings.processedDir}"
+ERROR_DIR="${settings.errorDir}"
 LOG_DIR="${settings.logDir}"
 DB_PATH="${absoluteDbPath}"
 
@@ -126,11 +125,9 @@ export async function handleSaveAppSettings(newSettings: Partial<Settings>): Pro
 
     let message = "Settings saved successfully.";
 
-    // If the Google AI API key is provided, write it to the .env file.
     if (newSettings.googleAiApiKey) {
         try {
             const envPath = path.join(process.cwd(), '.env');
-            // Check if key is different before writing
             const currentEnv = await fs.readFile(envPath, 'utf-8').catch(() => '');
             if (!currentEnv.includes(`GOOGLE_API_KEY=${newSettings.googleAiApiKey}`)) {
                await fs.writeFile(envPath, `GOOGLE_API_KEY=${newSettings.googleAiApiKey}\n`);
@@ -142,7 +139,6 @@ export async function handleSaveAppSettings(newSettings: Partial<Settings>): Pro
         }
     }
     
-    // Revalidate paths that might be affected by these settings
     revalidatePath('/settings');
     revalidatePath('/summarize');
     
@@ -154,17 +150,13 @@ export async function handleSaveAppSettings(newSettings: Partial<Settings>): Pro
   }
 }
 
-
 // Action specifically for backend settings that REQUIRE config.conf regeneration
 export async function handleSaveBackendSettings(newSettings: Partial<Settings>): Promise<{success: boolean, message?: string}> {
   try {
     const currentSettings = await getSettings();
     const updatedSettings = { ...currentSettings, ...newSettings };
 
-    // First, save all settings to the master settings.json file
     await saveSettings(updatedSettings);
-
-    // Then, regenerate the config.conf for the backend scripts
     await generateAndSaveConfig(updatedSettings);
     
     revalidatePath('/settings');

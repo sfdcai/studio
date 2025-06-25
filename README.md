@@ -7,6 +7,7 @@ The system uses a Linux server to automatically download photos and videos from 
 ## Features ✨
 
 *   **Web UI Dashboard:** A modern Next.js interface to view the status of all files, see logs, and monitor processing in real-time.
+*   **Live System Health Monitoring:** The dashboard provides live status updates for the processing queue and cloud uploads.
 *   **Centralized Configuration:** Manage all backend script settings directly from the web UI.
 *   **Server-Side Sync:** Backend scripts automatically pull all media directly from iCloud Photos.
 *   **Database-Driven:** Uses an SQLite database as the single source of truth, tracking every file, its metadata, and processing status.
@@ -32,7 +33,7 @@ These steps configure the server to automatically download and process your medi
 *   Python 3 and `pip` (for the `icloudpd` backend script).
 
 #### 2. Run the Backend Environment Setup Script
-Execute the `setup_media_server.sh` script. This script installs all required software for media processing (`rclone`, `ffmpeg`, `icloudpd`, etc.) and initializes the database.
+Execute the `setup_media_server.sh` script. This script installs all required software (`rclone`, `ffmpeg`, `icloudpd`, etc.), initializes the database, and starts the `rclone` remote control daemon with `pm2`.
 ```bash
 # Clone the repository first if you haven't already
 # git clone <your-repository-url>

@@ -176,7 +176,9 @@ export function FileExplorerClient({ data }: { data: MediaFile[] }) {
     []
   )
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+    React.useState<VisibilityState>({
+        "lastCompressed": false,
+    })
   const [rowSelection, setRowSelection] = React.useState({})
   const [date, setDate] = React.useState<Date>()
 

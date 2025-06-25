@@ -2,18 +2,11 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+import type { Prerequisite } from '@/lib/types';
 
 const execAsync = promisify(exec);
 
-export type Prerequisite = {
-    name: string;
-    command: string;
-    status: 'Installed' | 'Not Found';
-    path?: string;
-    helpText: string;
-};
-
-const prerequisites: Omit<Prerequisite, 'status' | 'path'>[] = [
+const prerequisitesList: Omit<Prerequisite, 'status' | 'path'>[] = [
     { name: 'rclone', command: 'rclone', helpText: "Run 'sudo apt-get install rclone' and then 'rclone config'." },
     { name: 'ffmpeg', command: 'ffmpeg', helpText: "Run 'sudo apt-get install ffmpeg'." },
     { name: 'ImageMagick (convert)', command: 'convert', helpText: "Run 'sudo apt-get install imagemagick'." },
@@ -22,7 +15,7 @@ const prerequisites: Omit<Prerequisite, 'status' | 'path'>[] = [
 ];
 
 export async function getSystemStatus(): Promise<Prerequisite[]> {
-    const statusPromises = prerequisites.map(async (p) => {
+    const statusPromises = prerequisitesList.map(async (p) => {
         try {
             const { stdout } = await execAsync(`which ${p.command}`);
             return { ...p, status: 'Installed' as const, path: stdout.trim() };

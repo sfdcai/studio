@@ -16,7 +16,12 @@ const LogLevelBadge = ({ level }: { level: string }) => {
 }
 
 export default async function LogsPage() {
-  const logs = await getAllLogs();
+  let logs = [];
+  try {
+      logs = await getAllLogs();
+  } catch (error) {
+      console.error("Failed to load logs:", error);
+  }
 
   return (
     <div className="p-4 md:p-8">
@@ -33,7 +38,7 @@ export default async function LogsPage() {
             <div className="p-4 font-mono text-sm">
               {logs.length === 0 ? (
                 <div className="flex justify-center items-center h-full text-muted-foreground">
-                    No log entries found.
+                    No log entries found. Run a sync job to generate logs.
                 </div>
               ) : (
                 logs.map((log, index) => (

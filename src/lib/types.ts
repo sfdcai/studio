@@ -5,6 +5,7 @@ export type Settings = {
   stagingDir: string;
   archiveDir: string;
   processedDir: string;
+  errorDir: string;
   logDir: string;
   dbPath: string;
   // Rclone
@@ -46,6 +47,7 @@ export type MediaFile = {
   stagingPath?: string,
   archivePath?: string,
   processedPath?: string,
+  errorLog?: string | null,
 }
 
 export type LogEntry = {
@@ -61,3 +63,11 @@ export type ProcessingHistoryPoint = {
     processed: number;
     failed: number;
 }
+
+export type Prerequisite = {
+    name: string;
+    command: string;
+    status: 'Installed' | 'Not Found';
+    path?: string;
+    helpText: string;
+};
