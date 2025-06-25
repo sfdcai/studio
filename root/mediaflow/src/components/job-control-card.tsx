@@ -10,7 +10,7 @@ import { runManualSync, runICloudDownload } from "@/app/(app)/dashboard/actions"
 import { Separator } from "@/components/ui/separator";
 
 export function JobControlCard() {
-    const [isSyncing, setIsSyncing] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const { toast } = useToast();
 
@@ -39,7 +39,7 @@ export function JobControlCard() {
     };
 
     const handleRunProcessing = async () => {
-        setIsSyncing(true);
+        setIsProcessing(true);
         toast({
             title: "Manual Processing Started",
             description: "The backend job is running. This may take a while.",
@@ -59,7 +59,7 @@ export function JobControlCard() {
                 variant: "destructive",
             });
         }
-        setIsSyncing(false);
+        setIsProcessing(false);
     };
 
     return (
@@ -70,7 +70,7 @@ export function JobControlCard() {
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center space-y-4">
                  <div className="w-full space-y-2 text-center">
-                    <Button onClick={handleRunDownload} disabled={isDownloading || isSyncing} size="lg" className="w-full">
+                    <Button onClick={handleRunDownload} disabled={isDownloading || isProcessing} size="lg" className="w-full">
                         {isDownloading ? (
                             <>
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -87,8 +87,8 @@ export function JobControlCard() {
                  </div>
                  <Separator/>
                  <div className="w-full space-y-2 text-center">
-                    <Button onClick={handleRunProcessing} disabled={isSyncing || isDownloading} size="lg" className="w-full">
-                        {isSyncing ? (
+                    <Button onClick={handleRunProcessing} disabled={isProcessing || isDownloading} size="lg" className="w-full">
+                        {isProcessing ? (
                             <>
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                 Processing...
