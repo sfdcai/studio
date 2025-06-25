@@ -5,6 +5,7 @@
   "stagingDir": "/data/nas/staging",
   "archiveDir": "/data/nas/archive",
   "processedDir": "/data/nas/processed",
+  "errorDir": "/data/nas/error",
   "logDir": "/data/nas/logs",
   "dbPath": "media_library.sqlite",
   "rcloneRemote": "gdrive",

@@ -11,7 +11,8 @@ export async function GET() {
     const stagingDir = settings.stagingDir;
 
     // Command to count files in the staging directory
-    const command = `find ${stagingDir} -type f | wc -l`;
+    // We add a check to see if the directory exists first to avoid errors from `find`
+    const command = `[ -d "${stagingDir}" ] && find "${stagingDir}" -type f | wc -l || echo 0`;
     const { stdout, stderr } = await execAsync(command);
 
     if (stderr) {

@@ -28,7 +28,6 @@ const StatusIndicator = ({ status, text }: { status: 'loading' | 'online' | 'off
 export function SystemHealthMonitor({ failedFiles }: { failedFiles: MediaFile[] }) {
     const [processingStatus, setProcessingStatus] = useState<{ fileCount: number } | null>(null);
     const [uploadStatus, setUploadStatus] = useState<any>(null);
-    const [selectedFileLogs, setSelectedFileLogs] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchStatus = () => {

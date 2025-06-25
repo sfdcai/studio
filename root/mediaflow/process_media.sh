@@ -36,7 +36,8 @@ db_log() {
     timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S")
 
     # Escape single quotes in the message to prevent SQL errors
-    local safe_message="${message//\'/\'\'}"
+    local safe_message
+    safe_message="${message//\'/\'\'}"
 
     if [ -n "$file_id_arg" ]; then
         sqlite3 "$DB_PATH" "INSERT INTO logs (file_id, timestamp, level, message) VALUES ($file_id_arg, '$timestamp', '$level', '$safe_message');"
@@ -104,7 +105,7 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
         age=0 # Default age to 0 (highest quality)
 
         # Check if capture_year is a valid number before calculating age
-        if [[ "$capture_year" =~ ^[0-9]+$ ]] && [ "$capture_year" -gt 1900 ]; then
+        if [[ "$capture_year" =~ ^[0-9]+$ ]] && [ "$capture_year" -gt 1900 ] && [ "$capture_year" -le "$current_year" ]; then
              age=$((current_year - capture_year))
         else
             db_log "WARN" "Could not determine a valid capture year from metadata ('$created_iso'). Defaulting age to 0." "$file_id"
@@ -230,7 +231,7 @@ if [ "$UPLOAD_ENABLED" = "true" ]; then
                 # Find the corresponding file_id
                 target_file_id=$(sqlite3 "$DB_PATH" "SELECT id FROM files WHERE file_name LIKE '${uploaded_file_name_no_ext//\'/''}%' LIMIT 1;")
                 if [ -n "$target_file_id" ]; then
-                     sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1, icloud_upload_status = 1 WHERE id = $target_file_id;"
+                     sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1 WHERE id = $target_file_id;"
                      db_log "INFO" "Updated cloud backup status for file ID $target_file_id" "$target_file_id"
                 fi
             done
