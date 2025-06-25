@@ -8,12 +8,6 @@ export type Settings = {
   errorDir: string;
   logDir: string;
   dbPath: string;
-  // Rclone
-  rcloneRemote: string;
-  drivePath: string; // This is the destination path on the remote
-  // iCloud
-  icloudUser: string; // This is the Apple ID
-  icloudFolderStructure: string;
   // Processing
   processLimit: number;
   jpgQualityMedium: number;
@@ -28,7 +22,6 @@ export type Settings = {
   aiAllowSettings: boolean;
   // Feature Toggles
   compressionEnabled: boolean;
-  uploadEnabled: boolean;
 };
 
 export type MediaFile = {
@@ -41,8 +34,6 @@ export type MediaFile = {
   createdDate: string
   lastCompressed: string
   nasBackup: boolean
-  googlePhotosBackup: boolean
-  icloudUpload: boolean
   fileName: string,
   stagingPath?: string,
   archivePath?: string,

@@ -19,7 +19,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { KeyRound, Files, BarChart3, Settings as SettingsIcon, UploadCloud, Zap } from "lucide-react"
+import { KeyRound, Files, BarChart3, Settings as SettingsIcon, Zap } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Settings } from "@/lib/types"
 import { Separator } from "@/components/ui/separator"
@@ -102,7 +102,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
           <CardHeader>
             <CardTitle>Storage & Backend Configuration</CardTitle>
             <CardDescription>
-              Manage paths, sync, and processing settings for the backend scripts. These settings regenerate `config.conf`.
+              Manage paths and processing settings for the backend scripts. These settings regenerate `config.conf`.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -123,7 +123,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                       <Input id="archiveDir" value={settings.archiveDir} onChange={handleInputChange} placeholder="/data/nas/archive"/>
                   </div>
                   <div className="space-y-2">
-                      <Label htmlFor="processedDir">Processed (for Upload) Directory</Label>
+                      <Label htmlFor="processedDir">Processed Directory</Label>
                       <Input id="processedDir" value={settings.processedDir} onChange={handleInputChange} placeholder="/data/nas/processed"/>
                   </div>
                    <div className="space-y-2">
@@ -141,39 +141,6 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
               </div>
             </div>
             <Separator/>
-            
-            {/* Sync Services */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-medium">Sync Services</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4 p-4 border rounded-lg">
-                         <h4 className="font-semibold">iCloud Photos</h4>
-                         <div className="space-y-2">
-                            <Label htmlFor="icloudUser">Apple ID</Label>
-                            <Input id="icloudUser" placeholder="apple@id.com" value={settings.icloudUser} onChange={handleInputChange} />
-                         </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="icloudFolderStructure">Folder Structure</Label>
-                            <Input id="icloudFolderStructure" placeholder="{created_date:%Y/%m/%d}" value={settings.icloudFolderStructure} onChange={handleInputChange} />
-                             <p className="text-xs text-muted-foreground">
-                                Format for subdirectories. Leave blank for default.
-                            </p>
-                         </div>
-                    </div>
-                     <div className="space-y-4 p-4 border rounded-lg">
-                         <h4 className="font-semibold">Rclone (Google Drive)</h4>
-                         <div className="space-y-2">
-                            <Label htmlFor="rcloneRemote">Rclone Remote Name</Label>
-                            <Input id="rcloneRemote" value={settings.rcloneRemote} onChange={handleInputChange} placeholder="gdrive"/>
-                         </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="drivePath">Destination Path</Label>
-                            <Input id="drivePath" value={settings.drivePath} onChange={handleInputChange} placeholder="My Media/Optimized"/>
-                         </div>
-                    </div>
-                </div>
-            </div>
-            <Separator/>
 
             {/* Backend Processing */}
              <div className="space-y-4">
@@ -189,20 +156,13 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                  <div className="space-y-4 pt-4">
                     <h4 className="text-md font-medium">Feature Toggles</h4>
                      <p className="text-sm text-muted-foreground">
-                        Disable features for debugging purposes. For example, turn off compression to quickly see if files are being discovered and added to the database.
+                        Disable features for debugging purposes.
                     </p>
                     <div className="flex items-center space-x-2">
                         <Switch id="compressionEnabled" checked={settings.compressionEnabled} onCheckedChange={handleSwitchChange('compressionEnabled')} />
                         <Label htmlFor="compressionEnabled" className="flex items-center gap-2">
                             <Zap className="h-4 w-4"/>
                             Enable Compression
-                        </Label>
-                    </div>
-                     <div className="flex items-center space-x-2">
-                        <Switch id="uploadEnabled" checked={settings.uploadEnabled} onCheckedChange={handleSwitchChange('uploadEnabled')} />
-                        <Label htmlFor="uploadEnabled" className="flex items-center gap-2">
-                            <UploadCloud className="h-4 w-4"/>
-                            Enable Cloud Upload
                         </Label>
                     </div>
                  </div>

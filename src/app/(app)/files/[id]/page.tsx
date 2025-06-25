@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Camera, Clock, HardDrive, Zap, Tag, Cloud, History, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, Camera, Clock, HardDrive, Zap, Tag, History, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -33,7 +33,7 @@ const StatusRow = ({ icon, label, status }: { icon: React.ReactNode, label: stri
           {label}
         </span>
         <Badge variant={status ? "default" : "secondary"}>
-          {status ? "Synced" : "Pending"}
+          {status ? "Archived" : "Pending"}
         </Badge>
       </div>
       <Separator />
@@ -177,16 +177,14 @@ export default async function FileDetailsPage({ params }: { params: { id: string
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Backup & Sync Status</CardTitle>
+                    <CardTitle>Backup Status</CardTitle>
                     <CardDescription>
-                        Current status across your storage locations.
+                        Current status of the original file.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-1">
                     <Separator className="mb-2"/>
-                    <StatusRow icon={<HardDrive className="h-4 w-4" />} label="NAS Backup" status={file.nasBackup} />
-                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="Google Drive" status={file.googlePhotosBackup} />
-                    <StatusRow icon={<Cloud className="h-4 w-4" />} label="iCloud" status={file.icloudUpload} />
+                    <StatusRow icon={<HardDrive className="h-4 w-4" />} label="NAS Archive" status={file.nasBackup} />
                 </CardContent>
             </Card>
         </div>
