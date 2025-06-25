@@ -10,6 +10,7 @@ import { runManualSync } from "@/app/(app)/dashboard/actions";
 
 export function JobControlCard() {
     const [isLoading, setIsLoading] = useState(false);
+    const [isIcloudLoading, setIsIcloudLoading] = useState(false);
     const { toast } = useToast();
 
     const handleRunJob = async () => {
@@ -36,6 +37,31 @@ export function JobControlCard() {
         setIsLoading(false);
     };
 
+    const handleRunIcloudDownload = async () => {
+        setIsIcloudLoading(true);
+        toast({
+            title: "iCloud Download Started",
+            description: "Initiating iCloud media download.",
+        });
+
+        try {
+            const response = await fetch('/api/icloud-download', {
+                method: 'POST',
+            });
+            const result = await response.json();
+
+            toast({
+                title: response.ok ? "iCloud Download Initiated" : "iCloud Download Error",
+                description: result.message || "An unexpected error occurred.",
+                variant: response.ok ? "default" : "destructive",
+            });
+        } catch (error: any) {
+             toast({ title: "iCloud Download Error", description: error.message || "An unexpected error occurred.", variant: "destructive" });
+        } finally {
+            setIsIcloudLoading(false);
+        }
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -56,7 +82,20 @@ export function JobControlCard() {
                         </>
                     )}
                 </Button>
-                 <p className="text-xs text-center text-muted-foreground">
+                <Button onClick={handleRunIcloudDownload} disabled={isIcloudLoading} size="lg" className="w-full">
+                    {isIcloudLoading ? (
+                        <>
+                            <Loader2 className=\"mr-2 h-5 w-5 animate-spin\" />
+                            Running iCloud Download...
+                        </>
+                    ) : (
+                        <>
+                            <PlayCircle className=\"mr-2 h-5 w-5\" />
+                            Run iCloud Download
+                        </>
+                    )}
+                </Button>
+ <p className="text-xs text-center text-muted-foreground">
                     This will download new media and process files in the staging directory according to your current settings.
                 </p>
             </CardContent>
