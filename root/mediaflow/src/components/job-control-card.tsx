@@ -6,12 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { PlayCircle, Loader2, Terminal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { runManualSync } from "@/app/(app)/dashboard/actions";
 
-type JobControlCardProps = {
-    runManualSync: () => Promise<{ ok: boolean; message: string; output?: string; error?: string; }>;
-}
-
-export function JobControlCard({ runManualSync }: JobControlCardProps) {
+export function JobControlCard() {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 

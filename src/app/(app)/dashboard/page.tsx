@@ -1,6 +1,6 @@
 import { getMediaFiles, getStats, getProcessingHistory } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
-import { runManualSync } from './actions';
+import { getSystemStatus } from './actions';
 
 export const revalidate = 0; // Disable caching
 
@@ -16,10 +16,15 @@ export default async function DashboardPage() {
   let data = [];
   let stats: any = {};
   let processingHistoryData = [];
+  let prerequisites = [];
+
   try {
-      data = await getMediaFiles();
-      stats = await getStats();
-      processingHistoryData = await getProcessingHistory();
+      [data, stats, processingHistoryData, prerequisites] = await Promise.all([
+        getMediaFiles(),
+        getStats(),
+        getProcessingHistory(),
+        getSystemStatus(),
+      ]);
   } catch (error) {
       console.error("Failed to load dashboard data:", error);
       // Render the client with empty/default data on error
@@ -32,7 +37,7 @@ export default async function DashboardPage() {
               processingErrors={0}
               filesByCategoryData={[]}
               processingHistoryData={[]}
-              runManualSync={runManualSync}
+              prerequisites={await getSystemStatus()}
           />
       );
   }
@@ -60,7 +65,7 @@ export default async function DashboardPage() {
         processingErrors={processingErrors}
         filesByCategoryData={filesByCategoryData}
         processingHistoryData={processingHistoryData}
-        runManualSync={runManualSync}
+        prerequisites={prerequisites}
     />
   )
 }

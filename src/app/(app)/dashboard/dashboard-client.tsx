@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { DollarSign, Folder, AlertTriangle, CopyCheck } from "lucide-react"
 import { JobControlCard } from '@/components/job-control-card'
 import { SystemStatusCard } from "@/components/system-status-card"
-import type { ProcessingHistoryPoint } from "@/lib/types"
+import type { ProcessingHistoryPoint, Prerequisite } from "@/lib/types"
 
 type DashboardClientProps = {
     totalFiles: number;
@@ -14,7 +14,7 @@ type DashboardClientProps = {
     processingErrors: number;
     filesByCategoryData: { name: string; files: number }[];
     processingHistoryData: ProcessingHistoryPoint[];
-    runManualSync: () => Promise<{ ok: boolean; message: string; output?: string; error?: string; }>;
+    prerequisites: Prerequisite[];
 }
 
 export function DashboardClient({
@@ -24,7 +24,7 @@ export function DashboardClient({
     processingErrors,
     filesByCategoryData,
     processingHistoryData,
-    runManualSync
+    prerequisites
 }: DashboardClientProps) {
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -100,8 +100,8 @@ export function DashboardClient({
                     </CardContent>
                 </Card>
                 <div className="space-y-4">
-                  <JobControlCard runManualSync={runManualSync} />
-                  <SystemStatusCard />
+                  <JobControlCard />
+                  <SystemStatusCard initialStatus={prerequisites} />
                 </div>
             </div>
             <div className="grid gap-4">

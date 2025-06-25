@@ -1,6 +1,6 @@
 import { getMediaFiles, getStats, getProcessingHistory } from '@/lib/data';
 import { DashboardClient } from './dashboard-client';
-import { runManualSync, getSystemStatus } from './actions';
+import { getSystemStatus } from './actions';
 
 export const revalidate = 0; // Disable caching
 
@@ -37,8 +37,7 @@ export default async function DashboardPage() {
               processingErrors={0}
               filesByCategoryData={[]}
               processingHistoryData={[]}
-              prerequisites={await getSystemStatus()} // Still try to get this
-              runManualSync={runManualSync}
+              prerequisites={await getSystemStatus()}
           />
       );
   }
@@ -67,7 +66,6 @@ export default async function DashboardPage() {
         filesByCategoryData={filesByCategoryData}
         processingHistoryData={processingHistoryData}
         prerequisites={prerequisites}
-        runManualSync={runManualSync}
     />
   )
 }

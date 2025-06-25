@@ -23,14 +23,13 @@ import { KeyRound, Files, BarChart3, Settings as SettingsIcon, UploadCloud, Zap 
 import { useToast } from "@/hooks/use-toast"
 import type { Settings } from "@/lib/types"
 import { Separator } from "@/components/ui/separator"
+import { handleSaveAppSettings, handleSaveBackendSettings } from "./actions"
 
 type SettingsClientProps = {
   initialSettings: Settings;
-  handleSaveAppSettings: (newSettings: Partial<Settings>) => Promise<{ success: boolean; message?: string }>;
-  handleSaveBackendSettings: (newSettings: Partial<Settings>) => Promise<{ success: boolean; message?: string }>;
 }
 
-export function SettingsClient({ initialSettings, handleSaveAppSettings, handleSaveBackendSettings }: SettingsClientProps) {
+export function SettingsClient({ initialSettings }: SettingsClientProps) {
   const { toast } = useToast()
 
   const [settings, setSettings] = React.useState(initialSettings)
