@@ -15,8 +15,6 @@ function mapRowToMediaFile(row: any): MediaFile {
         createdDate: row.created_date,
         lastCompressed: row.last_compressed_date || "N/A",
         nasBackup: !!row.nas_backup_status,
-        googlePhotosBackup: !!row.gphotos_backup_status,
-        icloudUpload: !!row.icloud_upload_status,
         stagingPath: row.staging_path,
         archivePath: row.archive_path,
         processedPath: row.processed_path,

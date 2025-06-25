@@ -266,42 +266,4 @@ find "$STAGING_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.pn
     processed_count=$((processed_count + 1))
 done
 
-# --- Upload Step ---
-db_log "INFO" "Checking upload setting. UPLOAD_ENABLED='${UPLOAD_ENABLED}'."
-if [ "$UPLOAD_ENABLED" = "true" ]; then
-    db_log "INFO" "--- Starting cloud upload of processed files ---"
-    if [ -n "$(ls -A $PROCESSED_DIR 2>/dev/null)" ]; then
-        rclone_log_file="$LOG_DIR/rclone_$(date +%Y-%m-%d).log"
-        db_log "INFO" "Rclone upload started. See rclone log for details: $rclone_log_file"
-        
-        rclone copy "$PROCESSED_DIR" "$RCLONE_REMOTE:$RCLONE_DEST_PATH" --log-file="$rclone_log_file" -vv
-        if [ $? -eq 0 ]; then
-            db_log "INFO" "Rclone upload successful. Updating database and cleaning up processed files directory."
-            
-            find "$PROCESSED_DIR" -type f -print0 | while IFS= read -r -d $'\0' uploaded_file; do
-                escaped_uploaded_file="${uploaded_file//\'/\'\'}"
-                # We need to find the file in the DB based on the processed_path, which we just uploaded
-                target_file_id=$(sqlite3 "$DB_PATH" "SELECT id FROM files WHERE processed_path = '$escaped_uploaded_file';")
-                if [ -n "$target_file_id" ]; then
-                     sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1 WHERE id = $target_file_id;"
-                     db_log "INFO" "Updated cloud backup status for file ID $target_file_id." "$target_file_id"
-                else
-                     db_log "WARN" "Could not find matching file in DB for uploaded file: $uploaded_file"
-                fi
-            done
-            
-            db_log "INFO" "Cleaning up processed files directory..."
-            rm -rf "$PROCESSED_DIR"/*
-            db_log "INFO" "Processed files directory cleaned up."
-        else
-            db_log "ERROR" "Rclone upload failed. Processed files are kept for next run. Check rclone log for details."
-        fi
-    else
-        db_log "INFO" "No new files in processed directory to upload."
-    fi
-else
-    db_log "INFO" "--- Cloud upload is disabled. Skipping. ---"
-fi
-
-
 db_log "INFO" "--- Media processing run finished. Processed $processed_count files. ---"
