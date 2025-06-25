@@ -47,8 +47,6 @@ async function initDb(db: Database) {
       created_date TEXT NOT NULL,
       last_compressed_date TEXT,
       nas_backup_status INTEGER DEFAULT 0,
-      gphotos_backup_status INTEGER DEFAULT 0,
-      icloud_upload_status INTEGER DEFAULT 0,
       staging_path TEXT,
       archive_path TEXT,
       processed_path TEXT,
