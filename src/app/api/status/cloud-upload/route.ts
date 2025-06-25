@@ -6,31 +6,34 @@ const execAsync = promisify(exec);
 
 export async function GET() {
   try {
+    // The command to check rclone daemon status
     const command = 'rclone rc core/stats';
-    const { stdout, stderr } = await execAsync(command);
-
-    if (stderr) {
-      // rclone rcd not running is a common case, handle it gracefully
-      if (stderr.includes('connection refused')) {
-        return NextResponse.json({ status: 'Offline', error: 'Rclone daemon is not running.' });
-      }
-      // For other errors, return them
-      return NextResponse.json({ status: 'Error', error: stderr.trim() }, { status: 500 });
-    }
+    const { stdout } = await execAsync(command);
     
+    // If command succeeds, parse stats and return
     const stats = JSON.parse(stdout);
     return NextResponse.json({ status: 'Online', ...stats });
 
   } catch (error: any) {
-    // This catches errors if the 'rclone' command itself isn't found or exec fails
-    if (error.code === 'ENOENT') {
-       return NextResponse.json({ status: 'Error', error: "The 'rclone' command was not found." }, { status: 500 });
+    // If the command fails for any reason, we analyze the error
+    const errorMessage = error.stderr || error.message || '';
+
+    // Case 1: rclone command not found
+    if (error.code === 'ENOENT' || errorMessage.includes('not found')) {
+       return NextResponse.json({ status: 'Error', error: "The 'rclone' command was not found on the system." });
     }
-    // Handle case where rclone rcd is not running
-    if (error.stderr && error.stderr.includes('connection refused')) {
-        return NextResponse.json({ status: 'Offline', error: 'Rclone daemon is not running.' });
+    
+    // Case 2: rclone daemon (rcd) is not running
+    if (errorMessage.includes('connection refused')) {
+        return NextResponse.json({ status: 'Offline', error: 'The rclone remote control daemon is not running.' });
     }
-    console.error('Error getting rclone stats:', error);
-    return NextResponse.json({ status: 'Error', error: 'Internal server error while fetching rclone stats.' }, { status: 500 });
+
+    // Case 3: Any other rclone error
+    console.error('An unexpected error occurred while fetching rclone stats:', error);
+    return NextResponse.json({
+        status: 'Error',
+        error: 'An unknown error occurred while checking rclone status. Check server logs for details.',
+        details: errorMessage 
+    });
   }
 }
