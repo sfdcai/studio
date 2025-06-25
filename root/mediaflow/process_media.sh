@@ -227,9 +227,9 @@ if [ "$UPLOAD_ENABLED" = "true" ]; then
             
             # Find all files uploaded and update their DB status
             find "$PROCESSED_DIR" -type f -print0 | while IFS= read -r -d $'\0' uploaded_file; do
-                uploaded_file_name_no_ext=$(basename "$uploaded_file" .jpg | basename -s .mp4)
-                # Find the corresponding file_id
-                target_file_id=$(sqlite3 "$DB_PATH" "SELECT id FROM files WHERE file_name LIKE '${uploaded_file_name_no_ext//\'/''}%' LIMIT 1;")
+                # Find the corresponding file_id by matching the full processed_path
+                escaped_uploaded_file="${uploaded_file//\'/\'\'}"
+                target_file_id=$(sqlite3 "$DB_PATH" "SELECT id FROM files WHERE processed_path = '$escaped_uploaded_file';")
                 if [ -n "$target_file_id" ]; then
                      sqlite3 "$DB_PATH" "UPDATE files SET gphotos_backup_status = 1 WHERE id = $target_file_id;"
                      db_log "INFO" "Updated cloud backup status for file ID $target_file_id" "$target_file_id"
