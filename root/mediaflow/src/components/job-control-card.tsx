@@ -36,7 +36,7 @@ export function JobControlCard() {
             });
         }
         setIsDownloading(false);
-    };
+    }
 
     const handleRunProcessing = async () => {
         setIsProcessing(true);
@@ -60,7 +60,7 @@ export function JobControlCard() {
             });
         }
         setIsProcessing(false);
-    };
+    }
 
     return (
         <Card>
