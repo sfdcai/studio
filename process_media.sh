@@ -40,6 +40,12 @@ db_log() {
     local safe_message
     safe_message="${message//\'/\'\'}"
 
+    # We need DB_PATH to be set to log
+    if [ -z "$DB_PATH" ]; then
+        echo "[$timestamp] [$level] DB_PATH not set. Log: $message"
+        return
+    fi
+
     if [ -n "$file_id_arg" ]; then
         sqlite3 "$DB_PATH" "INSERT INTO logs (file_id, timestamp, level, message) VALUES ($file_id_arg, '$timestamp', '$level', '$safe_message');"
     else
@@ -47,16 +53,25 @@ db_log() {
     fi
 }
 
+# --- Initial Validation ---
+# We need DB_PATH to be valid to use db_log, so check it first.
+if [ -z "$DB_PATH" ]; then
+    echo "FATAL: DB_PATH is not set in the configuration. Cannot continue."
+    exit 1
+fi
+# Create parent directory for database if it doesn't exist
+mkdir -p "$(dirname "$DB_PATH")"
+
 # --- Script Start ---
 db_log "INFO" "--- Starting media processing run with limit: $PROCESS_LIMIT ---"
 
 # --- Validate Configuration ---
 db_log "INFO" "Validating configuration variables..."
-CONFIG_VARS=("STAGING_DIR" "ARCHIVE_DIR" "PROCESSED_DIR" "ERROR_DIR" "LOG_DIR" "DB_PATH")
+CONFIG_VARS=("STAGING_DIR" "ARCHIVE_DIR" "PROCESSED_DIR" "ERROR_DIR" "LOG_DIR")
 all_vars_ok=true
 for var in "${CONFIG_VARS[@]}"; do
     if [ -z "${!var}" ]; then
-        db_log "ERROR" "FATAL: Configuration variable '$var' is not set. Please check config.conf. Exiting."
+        db_log "ERROR" "FATAL: Configuration variable '$var' is not set in config.conf. Please check settings. Exiting."
         all_vars_ok=false
     fi
 done
@@ -67,9 +82,17 @@ db_log "INFO" "Configuration validated successfully."
 
 # --- Ensure Directories Exist ---
 db_log "INFO" "Ensuring all necessary directories exist..."
+db_log "INFO" "Using STAGING_DIR: $STAGING_DIR"
+db_log "INFO" "Using ARCHIVE_DIR: $ARCHIVE_DIR"
+db_log "INFO" "Using PROCESSED_DIR: $PROCESSED_DIR"
+db_log "INFO" "Using ERROR_DIR: $ERROR_DIR"
+db_log "INFO" "Using LOG_DIR: $LOG_DIR"
+
 mkdir -p "$STAGING_DIR" "$ARCHIVE_DIR" "$PROCESSED_DIR" "$LOG_DIR" "$ERROR_DIR"
-# Create parent directory for database if it doesn't exist
-mkdir -p "$(dirname "$DB_PATH")"
+if [ $? -ne 0 ]; then
+    db_log "ERROR" "FATAL: Failed to create one or more directories. Check paths and permissions. Exiting."
+    exit 1
+fi
 db_log "INFO" "Directories ensured."
 
 processed_count=0
